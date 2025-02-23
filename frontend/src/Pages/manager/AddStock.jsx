@@ -18,7 +18,7 @@ function ManagerAddStockPage() {
 
   const fetchStockData = async () => {
     try {
-      const response = await fetch("http://localhost:5000/stock", {
+      const response = await fetch("https://pos-system-mbe.onrender.com/stock", {
         headers: {
           Authorization: `Bearer ${localStorage.getItem("token")}`,
         },
@@ -110,7 +110,7 @@ function ManagerAddStockPage() {
           selling_price: parseFloat(newItem.sellingPrice), // Convert to number
         };
   
-        const response = await fetch("http://localhost:5000/stock/add", {
+        const response = await fetch("https://pos-system-mbe.onrender.com/stock/add", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(payload),
@@ -147,7 +147,7 @@ function ManagerAddStockPage() {
 
         console.log("Stock being sent:", filteredStock);
 
-        const response = await fetch("http://localhost:5000/stock/update", {
+        const response = await fetch("https://pos-system-mbe.onrender.com/stock/update", {
             method: "PUT",
             headers: {
                 "Content-Type": "application/json",

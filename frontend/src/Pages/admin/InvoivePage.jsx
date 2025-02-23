@@ -41,7 +41,7 @@ function AdminInvoicePage() {
   
   // Fetch data from API
   useEffect(() => {
-    fetch("http://localhost:5000/invoice")
+    fetch("https://pos-system-mbe.onrender.com/invoice")
       .then((res) => res.json())
       .then((data) => {
         setProducts(data.stock);
@@ -110,7 +110,7 @@ function AdminInvoicePage() {
     }
   
     try {
-      const response = await fetch("http://localhost:5000/customer", {
+      const response = await fetch("https://pos-system-mbe.onrender.com/customer", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -246,7 +246,7 @@ function AdminInvoicePage() {
         surety_address: paymentType === "loan" || paymentType === "payLater" ? suretyAddress : null
       };
   
-      const response = await fetch("http://localhost:5000/invoice-submission", {
+      const response = await fetch("https://pos-system-mbe.onrender.com/invoice-submission", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(invoiceData)

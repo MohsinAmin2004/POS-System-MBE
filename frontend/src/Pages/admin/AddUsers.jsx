@@ -20,7 +20,7 @@ function AddUser() {
 
   const fetchUsers = async () => {
     try {
-      const response = await fetch("http://localhost:5000/users");
+      const response = await fetch("https://pos-system-mbe.onrender.com/users");
       if (!response.ok) throw new Error("Failed to fetch users");
       const data = await response.json();
       setUsers(data);
@@ -47,7 +47,7 @@ function AddUser() {
     }
 
     try {
-        const response = await fetch("http://localhost:5000/add-user", {
+        const response = await fetch("https://pos-system-mbe.onrender.com/add-user", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",

@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import SidebarAdmin from "./Sidebar";
 
-const API_BASE_URL = "http://localhost:5000"; // Your backend URL
+const API_BASE_URL = "https://pos-system-mbe.onrender.com"; // Your backend URL
 
 const AdminInstalmentPayment = () => {
   const [instalmentId, setInstalmentId] = useState("");

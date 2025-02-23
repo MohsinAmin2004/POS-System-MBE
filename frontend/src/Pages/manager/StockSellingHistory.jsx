@@ -12,14 +12,14 @@ const SalesTable = () => {
     const printRef = useRef();
 
     useEffect(() => {
-        fetch("http://localhost:5000/api/sales")
+        fetch("https://pos-system-mbe.onrender.com/api/sales")
             .then(response => response.json())
             .then(data => setSales(data))
             .catch(error => console.error("Error fetching sales:", error));
     }, []);
 
     const viewSaleDetails = (sale_id) => {
-        fetch(`http://localhost:5000/api/sale/${sale_id}`)
+        fetch(`https://pos-system-mbe.onrender.com/api/sale/${sale_id}`)
             .then(response => response.json())
             .then(data => {
                 setSelectedSale(data);

@@ -6,7 +6,7 @@ const AdminEditStockSellingHistory = () => {
 
     // Fetch Sales Data
     useEffect(() => {
-        fetch("http://localhost:5000/api/sales")
+        fetch("https://pos-system-mbe.onrender.com/api/sales")
             .then(response => response.json())
             .then(data => setSales(data))
             .catch(error => console.error("Error fetching sales:", error));
@@ -19,7 +19,7 @@ const AdminEditStockSellingHistory = () => {
         }
 
         try {
-            const response = await fetch("http://localhost:5000/api/delete-sale", {
+            const response = await fetch("https://pos-system-mbe.onrender.com/api/delete-sale", {
                 method: "POST", // Using POST instead of DELETE for flexibility
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ sale_id }),

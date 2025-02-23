@@ -14,7 +14,7 @@ function AdminCheckStockPage() {
 
   const fetchStockData = async () => {
     try {
-      const response = await fetch("http://localhost:5000/check-stock"); // Adjust URL if necessary
+      const response = await fetch("https://pos-system-mbe.onrender.com/check-stock"); // Adjust URL if necessary
       const data = await response.json();
       setStockData(data);
     } catch (error) {

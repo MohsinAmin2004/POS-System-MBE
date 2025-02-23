@@ -19,7 +19,7 @@ function AddShop() {
   // Fetch Shops from API
   const fetchShops = async () => {
     try {
-      const response = await fetch("http://localhost:5000/shops");
+      const response = await fetch("https://pos-system-mbe.onrender.com/shops");
       const data = await response.json();
       setShops(data);
     } catch (error) {
@@ -35,7 +35,7 @@ function AddShop() {
     }
 
     try {
-      const response = await fetch("http://localhost:5000/add-shop", {
+      const response = await fetch("https://pos-system-mbe.onrender.com/add-shop", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ name: shopName, location: shopLocation }),

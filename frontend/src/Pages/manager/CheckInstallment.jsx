@@ -11,8 +11,8 @@ const CheckInstalments = () => {
   const fetchData = async () => {
     setLoading(true);
     try {
-      const instalmentRes = await fetch("http://localhost:5000/instalments");
-      const unpaidSalesRes = await fetch("http://localhost:5000/unpaid_sales");
+      const instalmentRes = await fetch("https://pos-system-mbe.onrender.com/instalments");
+      const unpaidSalesRes = await fetch("https://pos-system-mbe.onrender.com/unpaid_sales");
 
       const instalmentData = await instalmentRes.json();
       const unpaidSalesData = await unpaidSalesRes.json();
