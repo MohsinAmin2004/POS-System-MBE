@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import './CSS/checkStock.css'
+import './CSS/CheckStock.css'
 import SidebarAdmin from "./Sidebar"; // Import the Sidebar
 
 function AdminCheckStockPage() {
