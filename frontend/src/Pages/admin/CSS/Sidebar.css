@@ -1,0 +1,46 @@
+/* Sidebar.css */
+.sidebar {
+  width: 200px;
+  height: 100vh;
+  position: fixed;
+  top: 0;
+  left: 0;
+  background-color: #333;
+  color: white;
+  padding: 20px;
+  overflow-y: auto;
+}
+
+.sidebar h2 {
+  text-align: center;
+  margin-bottom: 1px;
+}
+
+.sidebar ul {
+  list-style: none;
+  padding: 0;
+}
+
+.sidebar ul li {
+  padding: 10px 0;
+}
+
+.sidebar ul li a {
+  color: white;
+  text-decoration: none;
+  display: block;
+  padding: 1px;
+  transition: 0.3s;
+}
+
+.sidebar ul li a:hover {
+  background-color: #555;
+}
+
+.sidebar-logo {
+  width: 100px; /* Adjust the size */
+  height: auto;
+  display: block;
+  margin: 0 auto 15px; /* Center the image and add spacing */
+  
+}
