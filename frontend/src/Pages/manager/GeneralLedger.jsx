@@ -3,7 +3,8 @@ import SidebarManager from "./Sidebar_manager"; // Import the Sidebar
 
 const ManagerGeneralLedger = () => {
   const [data, setData] = useState([]);
-  const [searchDate, setSearchDate] = useState("");
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
@@ -30,10 +31,14 @@ const ManagerGeneralLedger = () => {
     return dateString.split("T")[0]; // Extract YYYY-MM-DD part
   };
 
-  // Apply date filtering
-  const filteredData = searchDate
-    ? data.filter((item) => formatDate(item.date) === searchDate)
-    : data;
+  // Apply date range filtering
+  const filteredData = data.filter((item) => {
+    const itemDate = formatDate(item.date);
+    return (
+      (!startDate || itemDate >= startDate) &&
+      (!endDate || itemDate <= endDate)
+    );
+  });
 
   return (
     <div>
@@ -56,24 +61,36 @@ const ManagerGeneralLedger = () => {
           th {
             background-color: #f2f2f2;
           }
+          .date-filter-container {
+            margin-bottom: 16px;
+            display: flex;
+            gap: 10px;
+          }
           input {
             padding: 8px;
-            margin-bottom: 16px;
             border: 1px solid #ccc;
             border-radius: 4px;
-            width: 50%;
           }
         `}
       </style>
       <div className="ledger-container">
         <h1 className="text-2xl font-bold mb-4">General Ledger</h1>
         
-        {/* Date Filter Input */}
-        <input
-          type="date"
-          value={searchDate}
-          onChange={(e) => setSearchDate(e.target.value)}
-        />
+        {/* Date Range Filter */}
+        <div className="date-filter-container">
+          <label>Start Date:</label>
+          <input
+            type="date"
+            value={startDate}
+            onChange={(e) => setStartDate(e.target.value)}
+          />
+          <label>End Date:</label>
+          <input
+            type="date"
+            value={endDate}
+            onChange={(e) => setEndDate(e.target.value)}
+          />
+        </div>
 
         {loading && <p>Loading...</p>}
         {error && <p className="text-red-500">{error}</p>}

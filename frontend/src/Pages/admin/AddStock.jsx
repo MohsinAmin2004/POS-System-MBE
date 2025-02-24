@@ -220,7 +220,7 @@ return (
                 }}
               />
             </td>
-
+                
             {/* Editable Selling Price */}
             <td>
               <input

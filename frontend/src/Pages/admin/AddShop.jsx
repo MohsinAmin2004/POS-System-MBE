@@ -6,7 +6,8 @@ function AddShop() {
   const [shopLocation, setShopLocation] = useState("");
   const [shops, setShops] = useState([]);
   const [username, setUsername] = useState(""); // Store logged-in user
-
+  //const API_BASE_URL = "https://pos-system-mbe.onrender.com";
+  const API_BASE_URL = "https://pos-system-mbe.onrender.com"
   useEffect(() => {
     const storedUsername = sessionStorage.getItem("username"); // Get username from session
     if (storedUsername) {

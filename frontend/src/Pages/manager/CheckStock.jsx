@@ -47,7 +47,7 @@ function CheckStockPage() {
             placeholder="Search by Model or Name"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-          />
+          />  
           <input
             type="text"
             placeholder="Filter by Shop"

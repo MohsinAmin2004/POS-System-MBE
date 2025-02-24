@@ -19,7 +19,7 @@ const client = new Client({
     ssl: process.env.DB_SSL === "true" ? { rejectUnauthorized: false } : false
 });
 
-// Connect to PostgreSQL
+
 client.connect()
     .then(() => console.log("✅ Connected to PostgreSQL"))
     .catch(err => console.error("❌ Database connection error:", err));
@@ -279,11 +279,12 @@ app.put('/stock/update', async (req, res) => {
                 );
 
                 // Log entry in Stock Ledger
-                await client.query(
+                if (quantity != 0)
+                {await client.query(
                     `INSERT INTO stock_ledger (model, shop_id, brand, name, quantity, purchasing_price) 
                      VALUES ($1, $2, $3, $4, $5, $6)`,
                     [model, shop_id, existingStock.rows[0].brand, existingStock.rows[0].name, quantity, purchasing_price]
-                );
+                );}
 
                 updatedStock.push(updateResult.rows[0]);
             } else {
@@ -302,7 +303,7 @@ app.put('/stock/update', async (req, res) => {
 // Fetch complete stock ledger (without filtering by date)
 app.get("/ledger", async (req, res) => {
     try {
-        const query = "SELECT date, model, brand, name, quantity, purchasing_price, total_price FROM stock_ledger ORDER BY date DESC";
+        const query = "SELECT ledger_id, date, model, brand, name, quantity, purchasing_price, total_price FROM stock_ledger ORDER BY date DESC";
         const result = await client.query(query);
         res.json(result.rows);
     } catch (err) {
@@ -675,12 +676,20 @@ app.post("/api/delete-sale", async (req, res) => {
         );
         console.log("check 3");
 
+        // for (const item of saleItems.rows) {
+        //     await client.query(
+        //         "UPDATE stock SET quantity = quantity + $1 WHERE MODEL = $2 AND EXISTS (SELECT 1 FROM stock WHERE MODEL = $2)",
+        //         [item.quantity, item.model]
+        //     );
+        // }
+
         for (const item of saleItems.rows) {
             await client.query(
-                "UPDATE stock SET quantity = quantity + $1 WHERE MODEL = $2 AND EXISTS (SELECT 1 FROM stock WHERE MODEL = $2)",
-                [item.quantity, item.stock_id]
+                "UPDATE stock SET quantity = quantity + $1 WHERE MODEL = $2",
+                [item.quantity, item.model] // Use item.MODEL instead of item.stock_id
             );
         }
+        
         console.log("check 4");
 
         // Step 3: Delete Related Data (Only if exists)
