@@ -653,6 +653,34 @@ app.get("/api/sales", async (req, res) => {
     }
 });
 
+app.post("/api/delete-ledger", async (req, res) => {
+    const { ledger_id } = req.body;
+
+    try {
+        await client.query("BEGIN"); // Start transaction
+        console.log("Deleting ledger entry...");
+
+        // Step 1: Check if Ledger Entry Exists
+        const ledgerExists = await client.query("SELECT 1 FROM ledger WHERE ledger_id = $1", [ledger_id]);
+        if (ledgerExists.rowCount === 0) {
+            return res.status(404).json({ error: "Ledger entry not found." });
+        }
+        console.log("Ledger entry found.");
+
+        // Step 2: Delete Ledger Entry
+        const result = await client.query("DELETE FROM ledger WHERE ledger_id = $1 RETURNING *", [ledger_id]);
+        console.log("Ledger entry deleted.");
+
+        await client.query("COMMIT"); // Commit transaction
+        res.json({ message: "Ledger entry deleted successfully!", deletedEntry: result.rows[0] });
+
+    } catch (error) {
+        await client.query("ROLLBACK"); // Rollback on error
+        console.error("Error deleting ledger entry:", error);
+        res.status(500).json({ error: "Failed to delete ledger entry." });
+    }
+});
+
 
 // DELETE Sale and Restore Stock
 app.post("/api/delete-sale", async (req, res) => {
