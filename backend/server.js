@@ -662,14 +662,14 @@ app.post("/api/delete-ledger", async (req, res) => {
         console.log("Deleting ledger entry...");
 
         // Step 1: Check if Ledger Entry Exists
-        const ledgerExists = await client.query("SELECT 1 FROM ledger WHERE ledger_id = $1", [ledger_id]);
+        const ledgerExists = await client.query("SELECT 1 FROM stock_ledger WHERE ledger_id = $1", [ledger_id]);
         if (ledgerExists.rowCount === 0) {
             return res.status(404).json({ error: "Ledger entry not found." });
         }
         console.log("Ledger entry found.");
 
         // Step 2: Delete Ledger Entry
-        const result = await client.query("DELETE FROM ledger WHERE ledger_id = $1 RETURNING *", [ledger_id]);
+        const result = await client.query("DELETE FROM stock_ledger WHERE ledger_id = $1 RETURNING *", [ledger_id]);
         console.log("Ledger entry deleted.");
 
         await client.query("COMMIT"); // Commit transaction
