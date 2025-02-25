@@ -654,6 +654,7 @@ app.get("/api/sales", async (req, res) => {
 });
 
 app.post("/api/delete-ledger", async (req, res) => {
+    console.log("Inside");
     const { ledger_id } = req.body;
 
     try {

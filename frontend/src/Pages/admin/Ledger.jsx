@@ -30,9 +30,8 @@ const GeneralLedger = () => {
 
   // Format date to YYYY-MM-DD (remove time)
   const formatDate = (dateString) => {
-    return new Date(dateString).toLocaleString("en-US", { timeZone: "Asia/Karachi" }).split(",")[0];
+    return dateString.split("T")[0];
   };
-  
 
   const handleDelete = async (ledgerId) => {
     if (!window.confirm("Are you sure you want to delete this entry?")) return;
