@@ -1,42 +1,77 @@
 import { useEffect, useState } from "react";
-import './CSS/CheckStock.css'
-import SidebarManager from "./Sidebar_manager"; // Import the Sidebar
+import "./CSS/CheckStock.css";
+import SidebarManager from "./Sidebar_manager";
 
 function CheckStockPage() {
   const [searchTerm, setSearchTerm] = useState("");
-  const [filterShop, setFilterShop] = useState("");
   const [filterBrand, setFilterBrand] = useState("");
   const [stockData, setStockData] = useState([]);
+  const [managerShopId, setManagerShopId] = useState(null);
+  const [shopMap, setShopMap] = useState({});
 
   useEffect(() => {
-    fetchStockData();
+    // Extract manager's shop ID from token
+    const token = sessionStorage.getItem("token");
+    if (token) {
+      const decodedToken = JSON.parse(atob(token.split(".")[1]));
+      setManagerShopId(decodedToken.shop_id);
+    }
   }, []);
+
+  useEffect(() => {
+    fetchShopData();
+  }, []);
+
+  useEffect(() => {
+    if (managerShopId && Object.keys(shopMap).length > 0) {
+      fetchStockData();
+    }
+  }, [managerShopId, shopMap]);
+
+  const fetchShopData = async () => {
+    try {
+      const response = await fetch("https://pos-system-mbe.onrender.com/shops");
+      const data = await response.json();
+      
+      // Create a mapping of shop name to shop_id
+      const shopMapping = {};
+      data.forEach((shop) => {
+        shopMapping[shop.name] = shop.shop_id;
+      });
+
+      setShopMap(shopMapping);
+    } catch (error) {
+      console.error("Error fetching shop data:", error);
+    }
+  };
 
   const fetchStockData = async () => {
     try {
-      const response = await fetch("https://pos-system-mbe.onrender.com/check-stock"); // Adjust URL if necessary
+      const response = await fetch("https://pos-system-mbe.onrender.com/check-stock");
       const data = await response.json();
-      setStockData(data);
+
+      // Map shop names to IDs and filter stock data based on manager's shop_id
+      const filteredData = data.filter(
+        (item) => shopMap[item.shop_name] === managerShopId
+      );
+
+      setStockData(filteredData);
     } catch (error) {
       console.error("Error fetching stock data:", error);
     }
   };
 
-  const handleRemoveItem = (model) => {
-    setStockData((prevStock) => prevStock.filter((item) => item.model !== model));
-  };
-
-  const filteredStock = stockData.filter((item) =>
-    (filterShop === "" || item.shop_name.toLowerCase().includes(filterShop.toLowerCase())) &&
-    (filterBrand === "" || item.brand.toLowerCase().includes(filterBrand.toLowerCase())) &&
-    (searchTerm === "" ||
-      item.model.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      item.name.toLowerCase().includes(searchTerm.toLowerCase()))
+  const filteredStock = stockData.filter(
+    (item) =>
+      (filterBrand === "" || item.brand.toLowerCase().includes(filterBrand.toLowerCase())) &&
+      (searchTerm === "" ||
+        item.model.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        item.name.toLowerCase().includes(searchTerm.toLowerCase()))
   );
 
   return (
     <div className="admin-container">
-      <SidebarManager /> {/* Sidebar Component */}
+      <SidebarManager />
       <div className="content">
         <h2>Check Stock</h2>
 
@@ -47,12 +82,6 @@ function CheckStockPage() {
             placeholder="Search by Model or Name"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-          />  
-          <input
-            type="text"
-            placeholder="Filter by Shop"
-            value={filterShop}
-            onChange={(e) => setFilterShop(e.target.value)}
           />
           <input
             type="text"
@@ -71,7 +100,6 @@ function CheckStockPage() {
               <th>Name</th>
               <th>Purchase Price</th>
               <th>Selling Price</th>
-              <th>Shop</th>
               <th>Quantity</th>
             </tr>
           </thead>
@@ -83,15 +111,12 @@ function CheckStockPage() {
                 <td>{item.name}</td>
                 <td>{item.purchasing_price}</td>
                 <td>{item.selling_price}</td>
-                <td>{item.shop_name}</td>
                 <td>{item.quantity}</td>
-                
               </tr>
             ))}
           </tbody>
         </table>
       </div>
-  
     </div>
   );
 }

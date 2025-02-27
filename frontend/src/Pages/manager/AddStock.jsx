@@ -17,42 +17,31 @@ function ManagerAddStockPage() {
   }, []);
 
   const fetchStockData = async () => {
+    const token = sessionStorage.getItem("token");
+    if (!token) {
+      navigate("/admin-login");
+      return;
+    }
+
+    const decodedToken = JSON.parse(atob(token.split(".")[1]));
+    const managerShopId = decodedToken.shop_id;
+
     try {
-      const response = await fetch("https://pos-system-mbe.onrender.com/stock", {
+      const response = await fetch(`https://pos-system-mbe.onrender.com/stock/${managerShopId}`, {
         headers: {
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
+          Authorization: `Bearer ${token}`,
         },
       });
-  
+
       if (!response.ok) {
         throw new Error(`HTTP error! Status: ${response.status}`);
       }
-  
+
       const data = await response.json();
-  
-      // Log data to check if it contains stock
-      console.log(data);
-  
-      // Adjust according to your response structure
-      if (Array.isArray(data)) {
-        setStockDatabase(data);
-      } else if (data && data.stock) {
-        setStockDatabase(data.stock);
-      } else {
-        setStockDatabase([]);
-      }
+      setStockDatabase(data);
     } catch (error) {
       console.error("Error fetching stock data:", error);
       setStockDatabase([]);
-    }
-  };
-
-  const handleAuthError = (error) => {
-    if (error.message.includes("401")) {
-      localStorage.removeItem("token");
-      navigate("/admin-login");
-    } else {
-      setMessage("An error occurred. Please try again.");
     }
   };
 
@@ -83,20 +72,22 @@ function ManagerAddStockPage() {
   
 
   const handleAddNewItem = async () => {
-    console.log(newItem?.model?.trim());
-    console.log(newItem?.name?.trim());
-    console.log(newItem?.brand?.trim());
-    console.log(newItem?.purchasePrice);
-    console.log(newItem?.sellingPrice);
-    console.log(newItem?.shop_id);
-    console.log(newItem?.quantity);
+    const token = sessionStorage.getItem("token");
+    if (!token) {
+      alert("Error: Authentication required. Please log in again.");
+      navigate("/admin-login");
+      return;
+    }
+
+    const decodedToken = JSON.parse(atob(token.split(".")[1]));
+    const managerShopId = decodedToken.shop_id;
+
     if (
       newItem?.model?.trim() &&
       newItem?.name?.trim() &&
       newItem?.brand?.trim() &&
       newItem?.purchasePrice &&
       newItem?.sellingPrice &&
-      newItem?.shop_id &&
       newItem?.quantity
     ) {
       try {
@@ -104,23 +95,25 @@ function ManagerAddStockPage() {
           model: newItem.model.trim(),
           brand: newItem.brand.trim(),
           name: newItem.name.trim(),
-          shop_id: parseInt(newItem.shop_id), // Ensure it's an integer
-          quantity: parseInt(newItem.quantity), // Ensure it's an integer
-          purchasing_price: parseFloat(newItem.purchasePrice), // Convert to number
-          selling_price: parseFloat(newItem.sellingPrice), // Convert to number
+          shop_id: managerShopId,
+          quantity: parseInt(newItem.quantity),
+          purchasing_price: parseFloat(newItem.purchasePrice),
+          selling_price: parseFloat(newItem.sellingPrice),
         };
-  
-        const response = await fetch("https://pos-system-mbe.onrender.com/stock/add", {
+
+        const response = await fetch("httphttps://pos-system-mbe.onrender.com/stock/add", {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
           body: JSON.stringify(payload),
         });
-  
-        const data = await response.json();
-        if (!response.ok) throw new Error(data.message || "Failed to add stock");
-  
+
+        if (!response.ok) throw new Error("Failed to add stock");
+
         setMessage("New stock added successfully!");
-        fetchStockData(); // Refresh stock data
+        fetchStockData();
         setNewItem(null);
       } catch (error) {
         console.error("Add stock error:", error);
@@ -130,46 +123,51 @@ function ManagerAddStockPage() {
       alert("Please fill all fields correctly before adding the item.");
     }
   };
-  
-
 
   const handleConfirmStock = async () => {
+    const managerShopId = sessionStorage.getItem("shop_id");
+  
+    if (!managerShopId) {
+      alert("Error: Shop ID not found. Please log in again.");
+      return;
+    }
+  
     try {
-        // Ensure only the required fields are sent
-        const filteredStock = selectedStock.map(({ model, shop_id, addedQuantity, purchasing_price, selling_price }) => ({
+      const filteredStock = selectedStock
+        .filter((item) => item.shop_id === parseInt(managerShopId)) // Ensure updates are only for manager's shop
+        .map(({ model, addedQuantity, purchasing_price, selling_price }) => ({
           model,
-          shop_id,
-          quantity: addedQuantity, // Send only the increment, not the full quantity
+          shop_id: parseInt(managerShopId),
+          quantity: addedQuantity,
           purchasing_price,
           selling_price,
-      }));
-      
-
-        console.log("Stock being sent:", filteredStock);
-
-        const response = await fetch("https://pos-system-mbe.onrender.com/stock/update", {
-            method: "PUT",
-            headers: {
-                "Content-Type": "application/json",
-                Authorization: `Bearer ${localStorage.getItem("token")}`,
-            },
-            body: JSON.stringify({ stock: filteredStock }), // Ensure it matches backend expectation
-        });
-
-        if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(`Failed to update stock: ${errorData.message}`);
-        }
-
-        setMessage("Stock updated successfully!");
-        setSelectedStock([]); // Clear selected stock after update
-        fetchStockData(); // Refresh stock data
+        }));
+  
+      console.log("Stock being sent:", filteredStock);
+  
+      const response = await fetch("https://pos-system-mbe.onrender.com/stock/update", {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${sessionStorage.getItem("token")}`,
+        },
+        body: JSON.stringify({ stock: filteredStock }),
+      });
+  
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(`Failed to update stock: ${errorData.message}`);
+      }
+  
+      setMessage("Stock updated successfully!");
+      setSelectedStock([]); // Clear selected stock after update
+      fetchStockData(); // Refresh stock data
     } catch (error) {
-        console.error("Stock update error:", error);
-        handleAuthError(error);
+      console.error("Stock update error:", error);
+      handleAuthError(error);
     }
-};
-
+  };
+  
   
 
 return (
@@ -290,15 +288,8 @@ return (
           onChange={(e) => setNewItem((prev) => ({ ...prev, sellingPrice: e.target.value }))}
         />
 
-        <input 
-          type="text" 
-          placeholder="Shop" 
-          value={newItem.shop_id} 
-          onChange={(e) => setNewItem((prev) => ({ ...prev, shop_id: e.target.value }))}
-        />
-        <button onClick={() => setSelectedStock(prev => prev.filter(stock => stock.model !== item.model))}>
-  Remove from View
-</button>
+        
+        
 
         <input 
           type="number" 
@@ -306,6 +297,7 @@ return (
           value={newItem.quantity} 
           onChange={(e) => setNewItem((prev) => ({ ...prev, quantity: e.target.value }))}
         />
+        
 
 
         <button onClick={handleAddNewItem}>Confirm New Item</button>

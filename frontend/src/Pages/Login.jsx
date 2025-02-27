@@ -5,9 +5,11 @@ import API_BASE_URL from "../config"; // Ensure this is correctly set
 function Login() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
   const handleLogin = async () => {
+    setLoading(true);
     try {
       const response = await fetch(`https://pos-system-mbe.onrender.com/login`, {
         method: "POST",
@@ -16,18 +18,22 @@ function Login() {
       });
 
       const data = await response.json();
-
       if (!response.ok) {
-        alert(data.error);
+        alert(data.error || "Login failed");
+        setLoading(false);
         return;
       }
 
-      // ✅ Store manager session
+      // ✅ Store token in sessionStorage
       sessionStorage.setItem("token", data.token);
-      sessionStorage.setItem("manager", JSON.stringify({ name: username }));
 
-      // ✅ Store session expiration timestamp
-      const expiresAt = Date.now() + 10 * 60 * 60 * 1000; // 10 hours from now
+      // ✅ Decode JWT to extract `shop_id`
+      const tokenPayload = JSON.parse(atob(data.token.split(".")[1]));
+      sessionStorage.setItem("shop_id", tokenPayload.shop_id);
+      sessionStorage.setItem("name", tokenPayload.name);
+
+      // ✅ Store session expiration timestamp (10 hours)
+      const expiresAt = Date.now() + 10 * 60 * 60 * 1000;
       sessionStorage.setItem("expiresAt", expiresAt);
 
       navigate("/manager-invoice");
@@ -35,6 +41,7 @@ function Login() {
       console.error("Login error:", error);
       alert("Login failed. Please try again.");
     }
+    setLoading(false);
   };
 
   return (
@@ -54,8 +61,8 @@ function Login() {
         onChange={(e) => setPassword(e.target.value)}
         style={styles.input}
       />
-      <button onClick={handleLogin} style={styles.button}>
-        Log In
+      <button onClick={handleLogin} style={styles.button} disabled={loading}>
+        {loading ? "Logging in..." : "Log In"}
       </button>
       <Link to="/admin-login" style={styles.link}>
         <button style={styles.button}>Admin Login</button>

@@ -41,7 +41,7 @@ function InvoicePage() {
   
   // Fetch data from API
   useEffect(() => {
-    fetch("https://pos-system-mbe.onrender.com/invoice")
+    fetch("http://localhost:5000/invoice")
       .then((res) => res.json())
       .then((data) => {
         setProducts(data.stock);
@@ -110,7 +110,7 @@ function InvoicePage() {
     }
   
     try {
-      const response = await fetch("https://pos-system-mbe.onrender.com/customer", {
+      const response = await fetch("http://localhost:5000/customer", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

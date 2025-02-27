@@ -7,7 +7,7 @@ function AddShop() {
   const [shops, setShops] = useState([]);
   const [username, setUsername] = useState(""); // Store logged-in user
   //const API_BASE_URL = "https://pos-system-mbe.onrender.com";
-  const API_BASE_URL = "https://pos-system-mbe.onrender.com"
+  const API_BASE_URL = "https://pos-system-mbe.onrender.com/"
   useEffect(() => {
     const storedUsername = sessionStorage.getItem("username"); // Get username from session
     if (storedUsername) {
@@ -90,6 +90,7 @@ function AddShop() {
           <table border="1" style={{ width: "100%", marginTop: "20px", textAlign: "center", borderCollapse: "collapse" }}> {/* ✅ Centered text */}
             <thead>
               <tr style={{ backgroundColor: "#f4f4f4", color: "black", textAlign: "center" }}>
+                <th>Shop ID</th>
                 <th>Shop Name</th>
                 <th>Shop Location</th>
               </tr>
@@ -97,6 +98,7 @@ function AddShop() {
             <tbody>
               {shops.map((shop) => (
                 <tr key={shop.shop_id} style={{ borderBottom: "1px solid #ddd" }}>
+                  <td>{shop.shop_id}</td>
                   <td>{shop.name}</td>
                   <td>{shop.location}</td>
                 </tr>

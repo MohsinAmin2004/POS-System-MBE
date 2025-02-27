@@ -9,13 +9,14 @@ function SidebarManager() {
 
   useEffect(() => {
     // ✅ Check session immediately
-    const storedManager = sessionStorage.getItem("manager");
+    const storedManager = sessionStorage.getItem("shop_id");
+    const storedManagerName = sessionStorage.getItem("name");
 
     if (!storedManager) {
       navigate("/"); // Redirect if session does not exist
     } else {
       const managerData = JSON.parse(storedManager);
-      setManagerName(managerData.name || "Manager");
+      setManagerName(storedManagerName.name || "Manager");
     }
   }, [navigate]);
 

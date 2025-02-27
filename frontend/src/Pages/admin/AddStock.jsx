@@ -132,15 +132,16 @@ function AdminAddStockPage() {
 
   const handleConfirmStock = async () => {
     try {
-        // Ensure only the required fields are sent
-        const filteredStock = selectedStock.map(({ model, shop_id, addedQuantity, purchasing_price, selling_price }) => ({
-          model,
-          shop_id,
-          quantity: addedQuantity, // Send only the increment, not the full quantity
-          purchasing_price,
-          selling_price,
-      }));
-      
+        // Include model, name, and brand in the request
+        const filteredStock = selectedStock.map(({ model, name, brand, shop_id, addedQuantity, purchasing_price, selling_price }) => ({
+            model,
+            name,
+            brand,
+            shop_id,
+            quantity: addedQuantity,
+            purchasing_price,
+            selling_price,
+        }));
 
         console.log("Stock being sent:", filteredStock);
 
@@ -150,7 +151,7 @@ function AdminAddStockPage() {
                 "Content-Type": "application/json",
                 Authorization: `Bearer ${localStorage.getItem("token")}`,
             },
-            body: JSON.stringify({ stock: filteredStock }), // Ensure it matches backend expectation
+            body: JSON.stringify({ stock: filteredStock }),
         });
 
         if (!response.ok) {
@@ -159,8 +160,8 @@ function AdminAddStockPage() {
         }
 
         setMessage("Stock updated successfully!");
-        setSelectedStock([]); // Clear selected stock after update
-        fetchStockData(); // Refresh stock data
+        setSelectedStock([]);
+        fetchStockData();
     } catch (error) {
         console.error("Stock update error:", error);
         handleAuthError(error);
@@ -185,69 +186,114 @@ return (
       </ul>
     )}
     <table border="1">
-      <thead>
-        <tr>
-          <th>Model</th>
-          <th>Name</th>
-          <th>Brand</th>
-          <th>Purchase Price</th>
-          <th>Selling Price</th>
-          <th>Shop</th>
-          <th>Available Quantity</th>
-          <th>Quantity Change</th>
-          <th>Actions</th>
-        </tr>
-      </thead>
-      <tbody>
-        {selectedStock.map((item, index) => (
-          <tr key={index}>
-            <td>{item.model}</td>
-            <td>{item.name}</td>
-            <td>{item.brand}</td>
+  <thead>
+    <tr>
+      <th>Model</th>
+      <th>Name</th>
+      <th>Brand</th>
+      <th>Purchase Price</th>
+      <th>Selling Price</th>
+      <th>Shop</th>
+      <th>Available Quantity</th>
+      <th>Quantity Change</th>
+      <th>Actions</th>
+    </tr>
+  </thead>
+  <tbody>
+    {selectedStock.map((item, index) => (
+      <tr key={index}>
+        {/* Editable Model */}
+        <td>
+          <input
+            type="text"
+            value={item.model || ""}
+            onChange={(e) => {
+              const value = e.target.value;
+              setSelectedStock((prev) =>
+                prev.map((stock, i) =>
+                  i === index ? { ...stock, model: value } : stock
+                )
+              );
+            }}
+          />
+        </td>
 
-            {/* Editable Purchase Price */}
-            <td>
-              <input
-                type="number"
-                value={item.purchasing_price || ""}
-                onChange={(e) => {
-                  const value = e.target.value;
-                  setSelectedStock((prev) =>
-                    prev.map((stock, i) =>
-                      i === index ? { ...stock, purchasing_price: value } : stock
-                    )
-                  );
-                }}
-              />
-            </td>
-                
-            {/* Editable Selling Price */}
-            <td>
-              <input
-                type="number"
-                value={item.selling_price || ""}
-                onChange={(e) => {
-                  const value = e.target.value;
-                  setSelectedStock((prev) =>
-                    prev.map((stock, i) =>
-                      i === index ? { ...stock, selling_price: value } : stock
-                    )
-                  );
-                }}
-              />
-            </td>
+        {/* Editable Name */}
+        <td>
+          <input
+            type="text"
+            value={item.name || ""}
+            onChange={(e) => {
+              const value = e.target.value;
+              setSelectedStock((prev) =>
+                prev.map((stock, i) =>
+                  i === index ? { ...stock, name: value } : stock
+                )
+              );
+            }}
+          />
+        </td>
 
-            <td>{item.shop}</td>
-            <td>{item.isNew ? "-" : item.quantity}</td>
-            <td>{item.addedQuantity}</td>
-            <td>
-              <button onClick={() => handleQuantityChange(item.model, 1)}>+</button>
-              <button onClick={() => handleQuantityChange(item.model, -1)}>-</button>
-            </td>
-          </tr>
-        ))}
-      </tbody>
-    </table>
+        {/* Editable Brand */}
+        <td>
+          <input
+            type="text"
+            value={item.brand || ""}
+            onChange={(e) => {
+              const value = e.target.value;
+              setSelectedStock((prev) =>
+                prev.map((stock, i) =>
+                  i === index ? { ...stock, brand: value } : stock
+                )
+              );
+            }}
+          />
+        </td>
+
+        {/* Editable Purchase Price */}
+        <td>
+          <input
+            type="number"
+            value={item.purchasing_price || ""}
+            onChange={(e) => {
+              const value = e.target.value;
+              setSelectedStock((prev) =>
+                prev.map((stock, i) =>
+                  i === index ? { ...stock, purchasing_price: value } : stock
+                )
+              );
+            }}
+          />
+        </td>
+
+        {/* Editable Selling Price */}
+        <td>
+          <input
+            type="number"
+            value={item.selling_price || ""}
+            onChange={(e) => {
+              const value = e.target.value;
+              setSelectedStock((prev) =>
+                prev.map((stock, i) =>
+                  i === index ? { ...stock, selling_price: value } : stock
+                )
+              );
+            }}
+          />
+        </td>
+
+        <td>{item.shop}</td>
+        <td>{item.isNew ? "-" : item.quantity}</td>
+        <td>{item.addedQuantity}</td>
+        <td>
+          <button onClick={() => handleQuantityChange(item.model, 1)}>+</button>
+          <button onClick={() => handleQuantityChange(item.model, -1)}>-</button>
+        </td>
+      </tr>
+    ))}
+  </tbody>
+</table>
+
     {!newItem && <button onClick={() => setNewItem({ model: searchTerm, brand: "", name: "", purchasePrice: "", sellingPrice: "", shop: "", quantity: "" })}>Add New Item</button>}
     {newItem && (
       <div>

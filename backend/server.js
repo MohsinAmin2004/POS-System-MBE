@@ -19,6 +19,15 @@ const client = new Client({
     ssl: process.env.DB_SSL === "true" ? { rejectUnauthorized: false } : false
 });
 
+// const client = new Client({
+//     host: "localhost",
+//     user: "postgres",
+//     port: 5432,
+//     password: "pass",
+//     database: "Malik_Brother_Electronics"
+//     // ssl: process.env.DB_SSL === "true" ? { rejectUnauthorized: false } : false
+// });
+
 
 client.connect()
     .then(() => console.log("✅ Connected to PostgreSQL"))
@@ -79,6 +88,7 @@ app.post("/login", async (req, res) => {
 
     try {
         const result = await client.query("SELECT * FROM Managers WHERE username = $1", [username]);
+        
 
         if (result.rows.length === 0) {
             return res.status(401).json({ error: "Invalid credentials" });
@@ -91,8 +101,8 @@ app.post("/login", async (req, res) => {
             return res.status(401).json({ error: "Invalid credentials" });
         }
 
-        const token = jwt.sign({ id: manager.manager_id, username: manager.username, role: "manager" }, SECRET_KEY, { expiresIn: "2m" });
-
+        const token = jwt.sign({ id: manager.manager_id, username: manager.username, role: "manager", shop_id: manager.shop_id }, SECRET_KEY, { expiresIn: "12h" });
+        console.log(manager.shop_id);
         res.json({ message: "Login successful", token });
     } catch (error) {
         console.error("Manager login error:", error);
@@ -196,6 +206,7 @@ app.get('/stock/:shop_id', async (req, res) => {
         res.status(500).send('Server error');
     }
 });
+
 // Add new stock item if it doesn't exist and log the change
 app.post('/stock/add', async (req, res) => {
     const { model, brand, name, shop_id, quantity, purchasing_price, selling_price } = req.body;
@@ -240,7 +251,7 @@ app.post('/stock/add', async (req, res) => {
 
 // Update stock and log changes
 app.put('/stock/update', async (req, res) => {
-    const stockItems = req.body.stock; // Expecting an array
+    const stockItems = req.body.stock;
 
     if (!Array.isArray(stockItems)) {
         return res.status(400).json({ message: "Invalid request format. Expected an array." });
@@ -250,9 +261,8 @@ app.put('/stock/update', async (req, res) => {
         let updatedStock = [];
 
         for (const item of stockItems) {
-            const { model, shop_id, quantity, purchasing_price, selling_price } = item;
+            const { model, name, brand, shop_id, quantity, purchasing_price, selling_price } = item;
 
-            // Check if stock exists
             const existingStock = await client.query(
                 'SELECT * FROM stock WHERE model = $1 AND shop_id = $2',
                 [model, shop_id]
@@ -262,29 +272,27 @@ app.put('/stock/update', async (req, res) => {
                 const prevQuantity = existingStock.rows[0].quantity;
                 const newQuantity = prevQuantity + quantity;
 
-                // Update stock
                 const updateResult = await client.query(
                     `UPDATE stock 
-                     SET quantity = $1, purchasing_price = $2, selling_price = $3 
-                     WHERE model = $4 AND shop_id = $5 
+                     SET model = $1, name = $2, brand = $3, quantity = $4, purchasing_price = $5, selling_price = $6 
+                     WHERE model = $7 AND shop_id = $8 
                      RETURNING *`,
-                    [newQuantity, purchasing_price, selling_price, model, shop_id]
+                    [model, name, brand, newQuantity, purchasing_price, selling_price, existingStock.rows[0].model, shop_id]
                 );
 
-                // Log update history
                 await client.query(
                     `INSERT INTO stock_edit_log (model, shop_id, previous_quantity, new_quantity, edit_time, action_type) 
                      VALUES ($1, $2, $3, $4, NOW(), 'Updated')`,
                     [model, shop_id, prevQuantity, newQuantity]
                 );
 
-                // Log entry in Stock Ledger
-                if (quantity != 0)
-                {await client.query(
-                    `INSERT INTO stock_ledger (model, shop_id, brand, name, quantity, purchasing_price) 
-                     VALUES ($1, $2, $3, $4, $5, $6)`,
-                    [model, shop_id, existingStock.rows[0].brand, existingStock.rows[0].name, quantity, purchasing_price]
-                );}
+                if (quantity != 0) {
+                    await client.query(
+                        `INSERT INTO stock_ledger (model, shop_id, brand, name, quantity, purchasing_price) 
+                         VALUES ($1, $2, $3, $4, $5, $6)`,
+                        [model, shop_id, brand, name, quantity, purchasing_price]
+                    );
+                }
 
                 updatedStock.push(updateResult.rows[0]);
             } else {
@@ -299,11 +307,10 @@ app.put('/stock/update', async (req, res) => {
         res.status(500).send('Server error');
     }
 });
-
 // Fetch complete stock ledger (without filtering by date)
 app.get("/ledger", async (req, res) => {
     try {
-        const query = "SELECT ledger_id, date, model, brand, name, quantity, purchasing_price, total_price FROM stock_ledger ORDER BY date DESC";
+        const query = "SELECT ledger_id, date, model, brand, name, quantity, shop_id, purchasing_price, total_price FROM stock_ledger ORDER BY date DESC";
         const result = await client.query(query);
         res.json(result.rows);
     } catch (err) {

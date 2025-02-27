@@ -113,8 +113,8 @@ function AddUser() {
               <tr key={index}>
                 <td>{user.name}</td>
                 <td>{user.username}</td>
-                <td>{user.role}</td>
-                <td>{user.shop_id || "N/A"}</td>
+                <td>{"shop_id" in user ? "Manager" : "Admin"}</td>
+                <td>{user.shop_id || ""}</td>
               </tr>
             ))}
           </tbody>

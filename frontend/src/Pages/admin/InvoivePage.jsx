@@ -246,7 +246,7 @@ function AdminInvoicePage() {
         surety_address: paymentType === "loan" || paymentType === "payLater" ? suretyAddress : null
       };
   
-      const response = await fetch("httphttps://pos-system-mbe.onrender.com/invoice-submission", {
+      const response = await fetch("https://pos-system-mbe.onrender.com/invoice-submission", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(invoiceData)
