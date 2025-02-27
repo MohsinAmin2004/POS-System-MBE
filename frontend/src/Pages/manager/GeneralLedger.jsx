@@ -68,7 +68,13 @@ const ManagerGeneralLedger = () => {
 
         {loading && <p>Loading...</p>}
         {error && <p className="text-red-500">{error}</p>}
-
+             {/* Total Ledger Worth Calculation */}
+             <h3>
+  Total Ledger Worth: PKR{" "}
+  {filteredData
+    .reduce((total, item) => total + (Number(item.total_price) || 0), 0)
+    .toLocaleString("en-US")}
+</h3>
         <table>
           <thead>
             <tr>

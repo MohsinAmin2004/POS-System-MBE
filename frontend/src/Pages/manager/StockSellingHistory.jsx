@@ -12,9 +12,18 @@ const SalesTable = () => {
     const printRef = useRef();
 
     useEffect(() => {
+        const shopId = sessionStorage.getItem("shop_id");
+        if (!shopId) {
+            console.error("No shop_id found in sessionStorage");
+            return;
+        }
+
         fetch("https://pos-system-mbe.onrender.com/api/sales")
             .then(response => response.json())
-            .then(data => setSales(data))
+            .then(data => {
+                const filteredSales = data.filter(sale => sale.shop_id === parseInt(shopId));
+                setSales(filteredSales);
+            })
             .catch(error => console.error("Error fetching sales:", error));
     }, []);
 

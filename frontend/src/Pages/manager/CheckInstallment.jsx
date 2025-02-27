@@ -7,6 +7,7 @@ const CheckInstalments = () => {
   const [unpaidSales, setUnpaidSales] = useState([]);
   const [loading, setLoading] = useState(false);
   const [suretyInfo, setSuretyInfo] = useState(null);
+  const shopId = sessionStorage.getItem("shop_id");
 
   const fetchData = async () => {
     setLoading(true);
@@ -17,8 +18,8 @@ const CheckInstalments = () => {
       const instalmentData = await instalmentRes.json();
       const unpaidSalesData = await unpaidSalesRes.json();
 
-      setInstalments(instalmentData);
-      setUnpaidSales(unpaidSalesData);
+      setInstalments(instalmentData.filter(item => item.shop_id === Number(shopId)));
+      setUnpaidSales(unpaidSalesData.filter(item => item.shop_id === Number(shopId)));
     } catch (error) {
       console.error("Error fetching data:", error);
     }
@@ -109,6 +110,7 @@ const CheckInstalments = () => {
                     <td>{customer.surety_cnic}</td>
                     <td>{customer.surety_phone_number}</td>
                     <td>{customer.surety_address}</td>
+                    
                     
                   </tr>
                 ))}

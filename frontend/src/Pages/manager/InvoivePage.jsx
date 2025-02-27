@@ -39,19 +39,26 @@ function InvoicePage() {
   const [marginAmount, setMarginAmount] = useState(0);
 
   
-  // Fetch data from API
   useEffect(() => {
-    fetch("http://localhost:5000/invoice")
+    fetch("https://pos-system-mbe.onrender.com/invoice")
       .then((res) => res.json())
       .then((data) => {
-        setProducts(data.stock);
+        const shopId = sessionStorage.getItem("shop_id"); // Get shop_id from sessionStorage
+        if (!shopId) {
+          console.error("No shop_id found in sessionStorage");
+          return;
+        }
+
+        const filteredProducts = data.stock.filter(
+          (product) => product.shop_id === parseInt(shopId)
+        );
+
+        setProducts(filteredProducts);
         setCustomers(data.customers);
       })
-
-
-      .catch((error) => console.error("Error fetching data:", error));
+      .catch((error) => console.error("Error fetching invoice data:", error));
   }, []);
-
+  
   // Handle Product Search
   useEffect(() => {
     const filtered = products.filter((product) =>
@@ -110,7 +117,7 @@ function InvoicePage() {
     }
   
     try {
-      const response = await fetch("http://localhost:5000/customer", {
+      const response = await fetch("https://pos-system-mbe.onrender.com/customer", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

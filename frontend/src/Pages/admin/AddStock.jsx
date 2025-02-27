@@ -203,20 +203,7 @@ return (
     {selectedStock.map((item, index) => (
       <tr key={index}>
         {/* Editable Model */}
-        <td>
-          <input
-            type="text"
-            value={item.model || ""}
-            onChange={(e) => {
-              const value = e.target.value;
-              setSelectedStock((prev) =>
-                prev.map((stock, i) =>
-                  i === index ? { ...stock, model: value } : stock
-                )
-              );
-            }}
-          />
-        </td>
+        <td>{item.model}</td>
 
         {/* Editable Name */}
         <td>
@@ -305,12 +292,6 @@ return (
           onChange={(e) => setNewItem((prev) => ({ ...prev, model: e.target.value }))}
         />
 
-        <input 
-          type="text" 
-          placeholder="Brand" 
-          value={newItem.brand} 
-          onChange={(e) => setNewItem((prev) => ({ ...prev, brand: e.target.value }))}
-        />
 
         <input 
           type="text" 
@@ -318,6 +299,14 @@ return (
           value={newItem.name} 
           onChange={(e) => setNewItem((prev) => ({ ...prev, name: e.target.value }))}
         />
+        <input 
+          type="text" 
+          placeholder="Brand" 
+          value={newItem.brand} 
+          onChange={(e) => setNewItem((prev) => ({ ...prev, brand: e.target.value }))}
+        />
+
+        
 
         <input 
           type="number" 

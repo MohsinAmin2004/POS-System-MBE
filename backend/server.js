@@ -390,7 +390,8 @@ app.get("/instalments", async (req, res) => {
             i.surety_cnic,
             i.surety_name,
             i.surety_phone_number,
-            i.surety_address
+            i.surety_address,
+            i.shop_id
         FROM Instalments i 
         JOIN Customers c ON i.cnic = c.cnic;
     `;
@@ -416,7 +417,8 @@ app.get("/unpaid_sales", async (req, res) => {
             u.surety_cnic,
             u.surety_name,
             u.surety_phone_number,
-            u.surety_address
+            u.surety_address,
+            u.shop_id
         FROM Unpaid_sales u
         JOIN Customers c ON u.cnic = c.cnic;
     `;
@@ -508,12 +510,16 @@ app.post("/invoice-submission", async (req, res) => {
     try {
         // Start transaction
         await client.query('BEGIN');
+        let shopId = '1';
+        for (const item of items){
+            shopId = item.shop_id;
+        }
 
         // Insert Sale
         const sale = await client.query(
-            `INSERT INTO Sales (cnic, total_discount, total_payable, payment_status, date_of_selling, sold_by) 
-             VALUES ($1, $2, $3, $4, NOW(), $5) RETURNING sale_id`,
-            [cnic, total_discount, final_payable, payment_status, sold_by]
+            `INSERT INTO Sales (cnic, total_discount, total_payable, payment_status, date_of_selling, sold_by, shop_id) 
+             VALUES ($1, $2, $3, $4, NOW(), $5, $6) RETURNING sale_id`,
+            [cnic, total_discount, final_payable, payment_status, sold_by, shopId]
         );
         const saleId = sale.rows[0].sale_id;
 
@@ -552,12 +558,12 @@ app.post("/invoice-submission", async (req, res) => {
                 `INSERT INTO Instalments (
                     cnic, sale_id, total_instalments, next_instalment_date, total_instalment_amount, 
                     total_margin_amount, margin_percentage, down_payment, total_loan, remaining_balance, 
-                    overdue_status, surety_cnic, surety_address, surety_name, surety_phone_number
-                 ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)`,
+                    overdue_status, surety_cnic, surety_address, surety_name, surety_phone_number, shop_id
+                 ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)`,
                 [
                     cnic, saleId, installments.total_instalments, installments.next_instalment_date, installments.instalment_amount,
                     installments.margin_amount, installments.margin_percentage, installments.down_payment, installments.total_payment,
-                    installments.remaining_balance, installments.overdue_status, surety_cnic, surety_address, surety_name, surety_phone_number
+                    installments.remaining_balance, installments.overdue_status, surety_cnic, surety_address, surety_name, surety_phone_number, shopId
                 ]
             );
         }
@@ -566,9 +572,9 @@ app.post("/invoice-submission", async (req, res) => {
         if (payment_status === 'Unpaid') {
             await client.query(
                 `INSERT INTO Unpaid_SALES (
-                    sale_id, cnic, total_unpaid_amount, status, surety_cnic, surety_address, surety_name, surety_phone_number
-                 ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
-                [saleId, cnic, final_payable, 1, surety_cnic, surety_address, surety_name, surety_phone_number]
+                    sale_id, cnic, total_unpaid_amount, status, surety_cnic, surety_address, surety_name, surety_phone_number, shop_id
+                 ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
+                [saleId, cnic, final_payable, 1, surety_cnic, surety_address, surety_name, surety_phone_number, shopId]
             );
         }
 

@@ -30,7 +30,6 @@ function Login() {
       // ✅ Decode JWT to extract `shop_id`
       const tokenPayload = JSON.parse(atob(data.token.split(".")[1]));
       sessionStorage.setItem("shop_id", tokenPayload.shop_id);
-      sessionStorage.setItem("name", tokenPayload.name);
 
       // ✅ Store session expiration timestamp (10 hours)
       const expiresAt = Date.now() + 10 * 60 * 60 * 1000;

@@ -7,12 +7,13 @@ const AdminCheckInstalments = () => {
   const [unpaidSales, setUnpaidSales] = useState([]);
   const [loading, setLoading] = useState(false);
   const [suretyInfo, setSuretyInfo] = useState(null);
+  const [shopId, setShopId] = useState("");
 
   const fetchData = async () => {
     setLoading(true);
     try {
       const instalmentRes = await fetch("https://pos-system-mbe.onrender.com/instalments");
-      const unpaidSalesRes = await fetch("httphttps://pos-system-mbe.onrender.com/unpaid_sales");
+      const unpaidSalesRes = await fetch("https://pos-system-mbe.onrender.com/unpaid_sales");
 
       const instalmentData = await instalmentRes.json();
       const unpaidSalesData = await unpaidSalesRes.json();
@@ -30,13 +31,15 @@ const AdminCheckInstalments = () => {
   }, []);
 
   const filteredInstalments = instalments.filter((customer) =>
-    customer.cnic.includes(searchTerm) ||
-    customer.name.toLowerCase().includes(searchTerm.toLowerCase())
+    (customer.cnic.includes(searchTerm) ||
+      customer.name.toLowerCase().includes(searchTerm.toLowerCase())) &&
+    (shopId === "" || customer.shop_id.toString() === shopId)
   );
 
   const filteredUnpaidSales = unpaidSales.filter((customer) =>
-    customer.cnic.includes(searchTerm) ||
-    customer.name.toLowerCase().includes(searchTerm.toLowerCase())
+    (customer.cnic.includes(searchTerm) ||
+      customer.name.toLowerCase().includes(searchTerm.toLowerCase())) &&
+    (shopId === "" || customer.shop_id.toString() === shopId)
   );
 
   const checkOverdueStatus = (nextInstalmentDate) => {
@@ -53,6 +56,8 @@ const AdminCheckInstalments = () => {
     setSuretyInfo(null);
   };
 
+  
+
   return (
     <div style={{ display: "flex" }}>
       <Sidebar />
@@ -65,7 +70,13 @@ const AdminCheckInstalments = () => {
           onChange={(e) => setSearchTerm(e.target.value)}
           style={{ width: "300px", padding: "8px", marginBottom: "20px", border: "1px solid #ccc", borderRadius: "4px" }}
         />
-
+        <input
+          type="text"
+          placeholder="Filter by Shop ID"
+          value={shopId}
+          onChange={(e) => setShopId(e.target.value)}
+          style={{ width: "200px", padding: "8px", border: "1px solid #ccc", borderRadius: "4px" }}
+        />
         {loading ? (
           <p>Loading...</p>
         ) : (
@@ -89,6 +100,7 @@ const AdminCheckInstalments = () => {
                   <th>Surety CNIC</th>
                   <th>Surety Phone Number</th>
                   <th>Surety Address</th>
+                  <th>Shop ID</th>
                 </tr>
               </thead>
               <tbody>
@@ -110,6 +122,7 @@ const AdminCheckInstalments = () => {
                     <td>{customer.surety_cnic}</td>
                     <td>{customer.surety_phone_number}</td>
                     <td>{customer.surety_address}</td>
+                    <td>{customer.shop_id}</td>
                     
                   </tr>
                 ))}
@@ -131,6 +144,7 @@ const AdminCheckInstalments = () => {
                   <th>Surety CNIC</th>
                   <th>Surety Phone Number</th>
                   <th>Surety Address</th>
+                  <th>Shop ID</th>
 
                 </tr>
               </thead>
@@ -148,6 +162,7 @@ const AdminCheckInstalments = () => {
                     <td>{customer.surety_cnic}</td>
                     <td>{customer.surety_phone_number}</td>
                     <td>{customer.surety_address}</td>
+                    <td>{customer.shop_id}</td>
                     
                   </tr>
                 ))}
