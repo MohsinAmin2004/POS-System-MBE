@@ -101,7 +101,7 @@ function ManagerAddStockPage() {
           selling_price: parseFloat(newItem.sellingPrice),
         };
 
-        const response = await fetch("httphttps://pos-system-mbe.onrender.com/stock/add", {
+        const response = await fetch("https://pos-system-mbe.onrender.com/stock/add", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
