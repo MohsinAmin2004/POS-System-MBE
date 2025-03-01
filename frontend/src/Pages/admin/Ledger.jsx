@@ -9,6 +9,8 @@ const GeneralLedger = () => {
   const [modelFilter, setModelFilter] = useState(""); // New: Model filter
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [shopFilter, setShopFilter] = useState(""); // New: Shop filter
+
 
   useEffect(() => {
     const fetchLedgerData = async () => {
@@ -64,7 +66,11 @@ const GeneralLedger = () => {
     // Model filter (case-insensitive match)
     const isModelMatch = !modelFilter || item.model.toLowerCase().includes(modelFilter.toLowerCase());
 
-    return isWithinRange && isSpecificDateMatch && isModelMatch;
+    const isShopMatch = !shopFilter || item.shop_id.toString().includes(shopFilter.toString());
+
+
+
+    return isWithinRange && isSpecificDateMatch && isModelMatch && isShopMatch;
   });
 
   return (
@@ -114,6 +120,9 @@ const GeneralLedger = () => {
           <input type="date" value={specificDate} onChange={(e) => setSpecificDate(e.target.value)} />
           <label>Model:</label>
           <input type="text" placeholder="Search by model..." value={modelFilter} onChange={(e) => setModelFilter(e.target.value)} />
+          <label>Shop:</label>
+          <input type="text" placeholder="Search by shop..." value={shopFilter} onChange={(e) => setShopFilter(e.target.value)} />
+
         </div>
 
         {loading && <p>Loading...</p>}
@@ -138,6 +147,7 @@ const GeneralLedger = () => {
               <th>Brand</th>
               <th>Name</th>
               <th>Quantity</th>
+              <th>Shop</th>
               <th>Purchasing Price</th>
               <th>Total Price</th>
               <th>Action</th>
@@ -153,6 +163,7 @@ const GeneralLedger = () => {
                   <td>{item.brand}</td>
                   <td>{item.name}</td>
                   <td>{item.quantity}</td>
+                  <td>{item.shop_id}</td>
                   <td>PKR {item.purchasing_price}</td>
                   <td>PKR {item.total_price}</td>
                   <td>
