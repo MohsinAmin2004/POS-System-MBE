@@ -132,11 +132,15 @@ function ManagerAddStockPage() {
       return;
     }
   
+    console.log(selectedStock);
+  
     try {
       const filteredStock = selectedStock
         .filter((item) => item.shop_id === parseInt(managerShopId)) // Ensure updates are only for manager's shop
-        .map(({ model, addedQuantity, purchasing_price, selling_price }) => ({
+        .map(({ model, name, brand, addedQuantity, purchasing_price, selling_price }) => ({
           model,
+          name,
+          brand,
           shop_id: parseInt(managerShopId),
           quantity: addedQuantity,
           purchasing_price,
@@ -167,6 +171,7 @@ function ManagerAddStockPage() {
       handleAuthError(error);
     }
   };
+  
   
   
 
@@ -262,16 +267,16 @@ return (
 
         <input 
           type="text" 
-          placeholder="Brand" 
-          value={newItem.brand} 
-          onChange={(e) => setNewItem((prev) => ({ ...prev, brand: e.target.value }))}
+          placeholder="Name" 
+          value={newItem.name} 
+          onChange={(e) => setNewItem((prev) => ({ ...prev, name: e.target.value }))}
         />
 
         <input 
           type="text" 
-          placeholder="Name" 
-          value={newItem.name} 
-          onChange={(e) => setNewItem((prev) => ({ ...prev, name: e.target.value }))}
+          placeholder="Brand" 
+          value={newItem.brand} 
+          onChange={(e) => setNewItem((prev) => ({ ...prev, brand: e.target.value }))}
         />
 
         <input 

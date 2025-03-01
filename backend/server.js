@@ -252,7 +252,6 @@ app.post('/stock/add', async (req, res) => {
 // Update stock and log changes
 app.put('/stock/update', async (req, res) => {
     const stockItems = req.body.stock;
-
     if (!Array.isArray(stockItems)) {
         return res.status(400).json({ message: "Invalid request format. Expected an array." });
     }

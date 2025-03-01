@@ -64,11 +64,11 @@ function AdminCheckStockPage() {
 
         {/* Total Stock Worth Calculation */}
         <h3>
-  Total Stock Worth: Rs.{" "}
-  {filteredStock
-    .reduce((total, item) => total + item.quantity * item.purchasing_price, 0)
-    .toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-</h3>
+          Total Stock Worth: Rs.{" "}
+          {filteredStock
+            .reduce((total, item) => total + item.quantity * item.purchasing_price, 0)
+            .toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+        </h3>
 
 
 
