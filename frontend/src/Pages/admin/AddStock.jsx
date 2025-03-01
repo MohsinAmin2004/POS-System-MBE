@@ -189,8 +189,8 @@ return (
   <thead>
     <tr>
       <th>Model</th>
-      <th>Name</th>
       <th>Brand</th>
+      <th>Name</th>
       <th>Purchase Price</th>
       <th>Selling Price</th>
       <th>Shop</th>
@@ -204,22 +204,6 @@ return (
       <tr key={index}>
         {/* Editable Model */}
         <td>{item.model}</td>
-
-        {/* Editable Name */}
-        <td>
-          <input
-            type="text"
-            value={item.name || ""}
-            onChange={(e) => {
-              const value = e.target.value;
-              setSelectedStock((prev) =>
-                prev.map((stock, i) =>
-                  i === index ? { ...stock, name: value } : stock
-                )
-              );
-            }}
-          />
-        </td>
 
         {/* Editable Brand */}
         <td>
@@ -236,6 +220,23 @@ return (
             }}
           />
         </td>
+
+        {/* Editable Name */}
+        <td>
+          <input
+            type="text"
+            value={item.name || ""}
+            onChange={(e) => {
+              const value = e.target.value;
+              setSelectedStock((prev) =>
+                prev.map((stock, i) =>
+                  i === index ? { ...stock, name: value } : stock
+                )
+              );
+            }}
+          />
+        </td>
+        
 
         {/* Editable Purchase Price */}
         <td>
@@ -295,17 +296,18 @@ return (
 
         <input 
           type="text" 
-          placeholder="Name" 
-          value={newItem.name} 
-          onChange={(e) => setNewItem((prev) => ({ ...prev, name: e.target.value }))}
-        />
-        <input 
-          type="text" 
           placeholder="Brand" 
           value={newItem.brand} 
           onChange={(e) => setNewItem((prev) => ({ ...prev, brand: e.target.value }))}
         />
 
+        
+        <input 
+          type="text" 
+          placeholder="Name" 
+          value={newItem.name} 
+          onChange={(e) => setNewItem((prev) => ({ ...prev, name: e.target.value }))}
+        />
         
 
         <input 

@@ -194,8 +194,8 @@ return (
       <thead>
         <tr>
           <th>Model</th>
-          <th>Name</th>
           <th>Brand</th>
+          <th>Name</th>
           <th>Purchase Price</th>
           <th>Selling Price</th>
           <th>Shop</th>
@@ -208,8 +208,8 @@ return (
         {selectedStock.map((item, index) => (
           <tr key={index}>
             <td>{item.model}</td>
-            <td>{item.name}</td>
             <td>{item.brand}</td>
+            <td>{item.name}</td>
 
             {/* Editable Purchase Price */}
             <td>
@@ -267,16 +267,16 @@ return (
 
         <input 
           type="text" 
-          placeholder="Name" 
-          value={newItem.name} 
-          onChange={(e) => setNewItem((prev) => ({ ...prev, name: e.target.value }))}
+          placeholder="Brand" 
+          value={newItem.brand} 
+          onChange={(e) => setNewItem((prev) => ({ ...prev, brand: e.target.value }))}
         />
 
         <input 
           type="text" 
-          placeholder="Brand" 
-          value={newItem.brand} 
-          onChange={(e) => setNewItem((prev) => ({ ...prev, brand: e.target.value }))}
+          placeholder="Name" 
+          value={newItem.name} 
+          onChange={(e) => setNewItem((prev) => ({ ...prev, name: e.target.value }))}
         />
 
         <input 
