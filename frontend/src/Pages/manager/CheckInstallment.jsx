@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import SidebarManager from "./Sidebar_manager"; // Import the Sidebar
+import Sidebar from "./Sidebar";
 
 const CheckInstalments = () => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -7,7 +7,7 @@ const CheckInstalments = () => {
   const [unpaidSales, setUnpaidSales] = useState([]);
   const [loading, setLoading] = useState(false);
   const [suretyInfo, setSuretyInfo] = useState(null);
-  const shopId = sessionStorage.getItem("shop_id");
+  const [shopId, setShopId] = useState("");
 
   const fetchData = async () => {
     setLoading(true);
@@ -18,8 +18,8 @@ const CheckInstalments = () => {
       const instalmentData = await instalmentRes.json();
       const unpaidSalesData = await unpaidSalesRes.json();
 
-      setInstalments(instalmentData.filter(item => item.shop_id === Number(shopId)));
-      setUnpaidSales(unpaidSalesData.filter(item => item.shop_id === Number(shopId)));
+      setInstalments(instalmentData);
+      setUnpaidSales(unpaidSalesData);
     } catch (error) {
       console.error("Error fetching data:", error);
     }
@@ -31,13 +31,15 @@ const CheckInstalments = () => {
   }, []);
 
   const filteredInstalments = instalments.filter((customer) =>
-    customer.cnic.includes(searchTerm) ||
-    customer.name.toLowerCase().includes(searchTerm.toLowerCase())
+    (customer.cnic.includes(searchTerm) ||
+      customer.name.toLowerCase().includes(searchTerm.toLowerCase())) &&
+    (shopId === "" || customer.shop_id.toString() === shopId)
   );
 
   const filteredUnpaidSales = unpaidSales.filter((customer) =>
-    customer.cnic.includes(searchTerm) ||
-    customer.name.toLowerCase().includes(searchTerm.toLowerCase())
+    (customer.cnic.includes(searchTerm) ||
+      customer.name.toLowerCase().includes(searchTerm.toLowerCase())) &&
+    (shopId === "" || customer.shop_id.toString() === shopId)
   );
 
   const checkOverdueStatus = (nextInstalmentDate) => {
@@ -54,9 +56,11 @@ const CheckInstalments = () => {
     setSuretyInfo(null);
   };
 
+  
+
   return (
     <div style={{ display: "flex" }}>
-      <SidebarManager />
+      <Sidebar />
       <div style={{ marginLeft: "250px", padding: "20px", width: "100%" }}>
         <h2>Check Instalments & Unpaid Sales</h2>
         <input
@@ -66,7 +70,13 @@ const CheckInstalments = () => {
           onChange={(e) => setSearchTerm(e.target.value)}
           style={{ width: "300px", padding: "8px", marginBottom: "20px", border: "1px solid #ccc", borderRadius: "4px" }}
         />
-
+        <input
+          type="text"
+          placeholder="Filter by Shop ID"
+          value={shopId}
+          onChange={(e) => setShopId(e.target.value)}
+          style={{ width: "200px", padding: "8px", border: "1px solid #ccc", borderRadius: "4px" }}
+        />
         {loading ? (
           <p>Loading...</p>
         ) : (
@@ -80,15 +90,21 @@ const CheckInstalments = () => {
                   <th>Name</th>
                   <th>CNIC</th>
                   <th>Phone</th>
-                  <th>Total Instalments</th>
+                  <th>Father</th>
+                  <th>Occupation</th>
+                  <th>Total Instalments Remaining</th>
+                
                   <th>Next Instalment Date</th>
-                  <th>Paid Amount</th>
-                  <th>Remaining Balance</th>
+                  <th>Per Instalment Amount</th>
+                  <th>Remaining Payment</th>
                   <th>Status</th>
                   <th>Surety Name</th>
                   <th>Surety CNIC</th>
                   <th>Surety Phone Number</th>
                   <th>Surety Address</th>
+                  <th>Surety Father</th>
+                  <th>Surety Occupation</th>
+                  <th>Shop ID</th>
                 </tr>
               </thead>
               <tbody>
@@ -99,10 +115,12 @@ const CheckInstalments = () => {
                     <td>{customer.name}</td>
                     <td>{customer.cnic}</td>
                     <td>{customer.phone_number}</td>
+                    <td>{customer.fathername}</td>
+                    <td>{customer.job}</td>
                     <td>{customer.total_instalments}</td>
                     <td>{customer.next_instalment_date?.split("T")[0] || "N/A"}</td>
-                    <td>{Number(customer.paid_amount || 0).toFixed(2)}</td>
-                    <td>{Number(customer.remaining_balance || 0).toFixed(2)}</td>
+                    <td>{customer.total_instalment_amount}</td>
+                    <td>{Number(customer.total_loan || 0).toFixed(2)}</td>
                     <td style={{ color: checkOverdueStatus(customer.next_instalment_date) === "Overdue" ? "red" : "green" }}>
                       {checkOverdueStatus(customer.next_instalment_date)}
                     </td>
@@ -110,7 +128,9 @@ const CheckInstalments = () => {
                     <td>{customer.surety_cnic}</td>
                     <td>{customer.surety_phone_number}</td>
                     <td>{customer.surety_address}</td>
-                    
+                    <td>{customer.surety_fathername}</td>
+                    <td>{customer.surety_job}</td>
+                    <td>{customer.shop_id}</td>
                     
                   </tr>
                 ))}
@@ -126,12 +146,17 @@ const CheckInstalments = () => {
                   <th>Name</th>
                   <th>CNIC</th>
                   <th>Phone</th>
+                  <th>Father</th>
+                  <th>Job</th>
                   <th>Total Payable</th>
                   <th>Status</th>
                   <th>Surety Name</th>
                   <th>Surety CNIC</th>
                   <th>Surety Phone Number</th>
                   <th>Surety Address</th>
+                  <th>Surety Father</th>
+                  <th>Surety Job</th>
+                  <th>Shop ID</th>
 
                 </tr>
               </thead>
@@ -143,12 +168,17 @@ const CheckInstalments = () => {
                     <td>{customer.name}</td>
                     <td>{customer.cnic}</td>
                     <td>{customer.phone_number}</td>
+                    <td>{customer.fathername}</td>
+                    <td>{customer.job}</td>
                     <td>{Number(customer.total_unpaid_amount || 0).toFixed(2)}</td>
                     <td style={{ color: "red" }}>Overdue</td>
                     <td>{customer.surety_name}</td>
                     <td>{customer.surety_cnic}</td>
                     <td>{customer.surety_phone_number}</td>
                     <td>{customer.surety_address}</td>
+                    <td>{customer.surety_fathername}</td>
+                    <td> {customer.surety_job}</td>
+                    <td>{customer.shop_id}</td>
                     
                   </tr>
                 ))}

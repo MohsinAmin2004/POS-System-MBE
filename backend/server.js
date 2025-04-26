@@ -375,6 +375,8 @@ app.get("/instalments", async (req, res) => {
             i.cnic, 
             c.name, 
             c.phone_number, 
+            c.job,
+            c.fathername,
             i.total_instalments, 
             i.next_instalment_date, 
             i.overdue_status, 
@@ -390,6 +392,8 @@ app.get("/instalments", async (req, res) => {
             i.surety_name,
             i.surety_phone_number,
             i.surety_address,
+            i.surety_job,
+            i.surety_fathername,
             i.shop_id
         FROM Instalments i 
         JOIN Customers c ON i.cnic = c.cnic;
@@ -411,12 +415,16 @@ app.get("/unpaid_sales", async (req, res) => {
             u.cnic, 
             u.sale_id,
             c.name, 
-            c.phone_number, 
+            c.phone_number,
+            c.job,
+            c.fathername, 
             u.total_unpaid_amount,               
             u.surety_cnic,
             u.surety_name,
             u.surety_phone_number,
             u.surety_address,
+            u.surety_job,
+            u.surety_fathername,
             u.shop_id
         FROM Unpaid_sales u
         JOIN Customers c ON u.cnic = c.cnic;
@@ -474,15 +482,15 @@ app.get("/invoice", async (req, res) => {
 
 // Add customer if not found
 app.post('/customer', async (req, res) => {
-    const { cnic, name, phone_number, address } = req.body;
+    const { cnic, name, phone_number, address, fathername, job } = req.body;
     try {
         const existingCustomer = await client.query('SELECT * FROM Customers WHERE cnic = $1', [cnic]);
         if (existingCustomer.rows.length > 0) {
             return res.json(existingCustomer.rows[0]);
         }
         const newCustomer = await client.query(
-            'INSERT INTO Customers (cnic, name, phone_number, address) VALUES ($1, $2, $3, $4) RETURNING *',
-            [cnic, name, phone_number, address]
+            'INSERT INTO Customers (cnic, name, phone_number, address, fathername, job) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *',
+            [cnic, name, phone_number, address, fathername, job]
         );
         res.json(newCustomer.rows[0]);
     } catch (error) {
@@ -503,7 +511,9 @@ app.post("/invoice-submission", async (req, res) => {
         surety_cnic,
         surety_address,
         surety_name,
-        surety_phone_number
+        surety_phone_number,
+        suretyFathername,
+        suretyJob
     } = req.body;
 
     try {
@@ -557,12 +567,12 @@ app.post("/invoice-submission", async (req, res) => {
                 `INSERT INTO Instalments (
                     cnic, sale_id, total_instalments, next_instalment_date, total_instalment_amount, 
                     total_margin_amount, margin_percentage, down_payment, total_loan, remaining_balance, 
-                    overdue_status, surety_cnic, surety_address, surety_name, surety_phone_number, shop_id
-                 ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)`,
+                    overdue_status, surety_cnic, surety_address, surety_name, surety_phone_number, shop_id, surety_fathername, surety_job
+                 ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18)`,
                 [
                     cnic, saleId, installments.total_instalments, installments.next_instalment_date, installments.instalment_amount,
                     installments.margin_amount, installments.margin_percentage, installments.down_payment, installments.total_payment,
-                    installments.remaining_balance, installments.overdue_status, surety_cnic, surety_address, surety_name, surety_phone_number, shopId
+                    installments.remaining_balance, installments.overdue_status, surety_cnic, surety_address, surety_name, surety_phone_number, shopId, suretyFathername, suretyJob
                 ]
             );
         }
@@ -571,9 +581,9 @@ app.post("/invoice-submission", async (req, res) => {
         if (payment_status === 'Unpaid') {
             await client.query(
                 `INSERT INTO Unpaid_SALES (
-                    sale_id, cnic, total_unpaid_amount, status, surety_cnic, surety_address, surety_name, surety_phone_number, shop_id
-                 ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
-                [saleId, cnic, final_payable, 1, surety_cnic, surety_address, surety_name, surety_phone_number, shopId]
+                    sale_id, cnic, total_unpaid_amount, status, surety_cnic, surety_address, surety_name, surety_phone_number, shop_id, surety_job, surety_fathername
+                 ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)`,
+                [saleId, cnic, final_payable, 1, surety_cnic, surety_address, surety_name, surety_phone_number, shopId, suretyFathername, suretyJob]
             );
         }
 
@@ -647,6 +657,39 @@ app.get("/api/sale/:sale_id", async (req, res) => {
         res.status(500).json({ error: "Internal Server Error" });
     }
 });
+
+// Get Products Sold by Sale ID
+app.get("/sale-products/:sale_id", async (req, res) => {
+    try {
+        const { sale_id } = req.params;
+
+        // Fetch products sold in the sale
+        const productsQuery = `
+            SELECT model, quantity, selling_price
+            FROM sale_items
+            WHERE sale_id = $1
+        `;
+        const productsResult = await client.query(productsQuery, [sale_id]);
+
+        const dateQuery = `SELECT date_of_selling from SALES where sale_id = $1`;
+        const dateResult = await client.query(dateQuery, [sale_id]);
+
+        if (productsResult.rows.length === 0) {
+            return res.status(404).json({ error: "No products found for this sale" });
+        }
+
+        res.json({
+            sale_id,
+            date: dateResult.rows[0]?.date_of_selling, // extract only the date
+            products: productsResult.rows,
+        });
+        
+    } catch (error) {
+        console.error("Error fetching products for sale:", error);
+        res.status(500).json({ error: "Internal Server Error" });
+    }
+});
+
 
 app.get("/api/sales", async (req, res) => {
     try {
@@ -843,16 +886,31 @@ app.get("/unpaid-sale/:saleIdOrCnic", async (req, res) => {
     try {
         const { saleIdOrCnic } = req.params;
 
-        const result = await client.query(
+        // First, fetch the unpaid sale
+        const saleResult = await client.query(
             "SELECT * FROM unpaid_sales WHERE sale_id::TEXT = $1 OR cnic = $1",
             [saleIdOrCnic]
         );
 
-        if (result.rows.length === 0) {
+        if (saleResult.rows.length === 0) {
             return res.status(404).json({ error: "Unpaid sale not found" });
         }
 
-        res.json(result.rows[0]);
+        const unpaidSale = saleResult.rows[0];
+
+        // Then, fetch the customer name based on CNIC
+        const customerResult = await client.query(
+            "SELECT name FROM customers WHERE cnic = $1",
+            [unpaidSale.cnic]
+        );
+
+        const customerName = customerResult.rows.length > 0 ? customerResult.rows[0].name : null;
+
+        // Add customer name to the response
+        res.json({
+            ...unpaidSale,
+            customer_name: customerName
+        });
     } catch (error) {
         res.status(500).json({ error: error.message });
     }

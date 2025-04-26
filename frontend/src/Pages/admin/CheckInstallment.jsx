@@ -90,6 +90,8 @@ const AdminCheckInstalments = () => {
                   <th>Name</th>
                   <th>CNIC</th>
                   <th>Phone</th>
+                  <th>Father</th>
+                  <th>Occupation</th>
                   <th>Total Instalments Remaining</th>
                 
                   <th>Next Instalment Date</th>
@@ -100,6 +102,8 @@ const AdminCheckInstalments = () => {
                   <th>Surety CNIC</th>
                   <th>Surety Phone Number</th>
                   <th>Surety Address</th>
+                  <th>Surety Father</th>
+                  <th>Surety Occupation</th>
                   <th>Shop ID</th>
                 </tr>
               </thead>
@@ -111,6 +115,8 @@ const AdminCheckInstalments = () => {
                     <td>{customer.name}</td>
                     <td>{customer.cnic}</td>
                     <td>{customer.phone_number}</td>
+                    <td>{customer.fathername}</td>
+                    <td>{customer.job}</td>
                     <td>{customer.total_instalments}</td>
                     <td>{customer.next_instalment_date?.split("T")[0] || "N/A"}</td>
                     <td>{customer.total_instalment_amount}</td>
@@ -122,6 +128,8 @@ const AdminCheckInstalments = () => {
                     <td>{customer.surety_cnic}</td>
                     <td>{customer.surety_phone_number}</td>
                     <td>{customer.surety_address}</td>
+                    <td>{customer.surety_fathername}</td>
+                    <td>{customer.surety_job}</td>
                     <td>{customer.shop_id}</td>
                     
                   </tr>
@@ -138,12 +146,16 @@ const AdminCheckInstalments = () => {
                   <th>Name</th>
                   <th>CNIC</th>
                   <th>Phone</th>
+                  <th>Father</th>
+                  <th>Job</th>
                   <th>Total Payable</th>
                   <th>Status</th>
                   <th>Surety Name</th>
                   <th>Surety CNIC</th>
                   <th>Surety Phone Number</th>
                   <th>Surety Address</th>
+                  <th>Surety Father</th>
+                  <th>Surety Job</th>
                   <th>Shop ID</th>
 
                 </tr>
@@ -156,12 +168,16 @@ const AdminCheckInstalments = () => {
                     <td>{customer.name}</td>
                     <td>{customer.cnic}</td>
                     <td>{customer.phone_number}</td>
+                    <td>{customer.fathername}</td>
+                    <td>{customer.job}</td>
                     <td>{Number(customer.total_unpaid_amount || 0).toFixed(2)}</td>
                     <td style={{ color: "red" }}>Overdue</td>
                     <td>{customer.surety_name}</td>
                     <td>{customer.surety_cnic}</td>
                     <td>{customer.surety_phone_number}</td>
                     <td>{customer.surety_address}</td>
+                    <td>{customer.surety_fathername}</td>
+                    <td> {customer.surety_job}</td>
                     <td>{customer.shop_id}</td>
                     
                   </tr>

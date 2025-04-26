@@ -15,7 +15,7 @@ function AdminInvoicePage() {
 
   const [customerCNIC, setCustomerCNIC] = useState("");
   const [selectedCustomer, setSelectedCustomer] = useState(null);
-  const [newCustomer, setNewCustomer] = useState({ cnic: "", name: "", phone_number: "", address: "", });
+  const [newCustomer, setNewCustomer] = useState({ cnic: "", name: "", phone_number: "", address: "", fathername: "", job: "" });
   const [showCustomerForm, setShowCustomerForm] = useState(false);
 
   const [paymentType, setPaymentType] = useState(""); // Default empty
@@ -34,6 +34,8 @@ function AdminInvoicePage() {
   // Surety-related state
   const [suretyCnic, setSuretyCnic] = useState("");
   const [suretyAddress, setSuretyAddress] = useState("");
+  const [suretyJob, setSuretyJob] = useState("");
+  const [suretyFathername, setSuretyFathername] = useState("");
   const [suretyName, setSuretyName] = useState("");
   const [suretyPhone, setSuretyPhone] = useState("");
   const [marginAmount, setMarginAmount] = useState(0);
@@ -236,6 +238,8 @@ function AdminInvoicePage() {
           margin_percentage: margin,
           down_payment: downPayment,
           total_payment: toBePaid,
+          suretyFathername: suretyFathername,
+          suretyJob: suretyJob,
           remaining_balance: totalAmount - downPayment,
           overdue_status: 1
         } : null,
@@ -243,7 +247,9 @@ function AdminInvoicePage() {
         surety_cnic: paymentType === "loan" || paymentType === "payLater" ? suretyCnic : null,
         surety_name: paymentType === "loan" || paymentType === "payLater" ? suretyName : null,
         surety_phone_number: paymentType === "loan" || paymentType === "payLater" ? suretyPhone : null,
-        surety_address: paymentType === "loan" || paymentType === "payLater" ? suretyAddress : null
+        surety_address: paymentType === "loan" || paymentType === "payLater" ? suretyAddress : null,
+        suretyFathername: paymentType === "loan" || paymentType === "payLater" ? suretyFathername : null,
+        suretyJob: paymentType === "loan" || paymentType === "payLater" ? suretyJob : null
       };
   
       const response = await fetch("https://pos-system-mbe.onrender.com/invoice-submission", {
@@ -414,9 +420,21 @@ function AdminInvoicePage() {
           />
           <input
             type="text"
-            placeholder="Enter Address Address"
+            placeholder="Enter Address"
             value={newCustomer.address}
             onChange={(e) => handleNewCustomerInput("address", e.target.value)}
+          />
+          <input
+            type="text"
+            placeholder="Enter Job"
+            value={newCustomer.job}
+            onChange={(e) => handleNewCustomerInput("job", e.target.value)}
+          />
+          <input
+            type="text"
+            placeholder="Enter Father Name"
+            value={newCustomer.fathername}
+            onChange={(e) => handleNewCustomerInput("fathername", e.target.value)}
           />
           
           <button onClick={handleSelectNewCustomer}>Add Customer</button>
@@ -479,6 +497,8 @@ function AdminInvoicePage() {
     <input type="text" placeholder="Surety Name" value={suretyName} onChange={(e) => setSuretyName(e.target.value)} />
     <input type="text" placeholder="Surety Phone" value={suretyPhone} onChange={(e) => setSuretyPhone(e.target.value)} />
     <input type="text" placeholder="Surety Address" value={suretyAddress} onChange={(e) => setSuretyAddress(e.target.value)} />
+    <input type="text" placeholder="Surety Job" value={suretyJob} onChange={(e) => setSuretyJob(e.target.value)} />
+    <input type="text" placeholder="Surety Father Name" value={suretyFathername} onChange={(e) => setSuretyFathername(e.target.value)} />
   </div>
 )}
 
@@ -552,6 +572,8 @@ function AdminInvoicePage() {
           <p><strong>CNIC:</strong> {selectedCustomer.cnic}</p>
           <p><strong>Phone:</strong> {selectedCustomer.phone_number}</p>
           <p><strong>Address:</strong> {selectedCustomer.address}</p>
+          <p><strong>Father:</strong> {selectedCustomer.fathername}</p>
+          <p><strong>Job:</strong> {selectedCustomer.job}</p>
         </div>
       ) : (
         <p>No customer selected</p>
