@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import Sidebar from "./Sidebar";
+import SidebarManager from "./Sidebar_manager";
 
 const CheckInstalments = () => {
   const [searchTerm, setSearchTerm] = useState("");

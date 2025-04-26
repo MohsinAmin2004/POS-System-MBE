@@ -1,5 +1,5 @@
 import React, { useState, useRef } from "react";
-import SidebarAdmin from "./Sidebar";
+import SidebarManager from "./Sidebar_manager";
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
 import logo from "../../assets/LOGO.png"; // Adjust path based on your folder structure

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import './CSS/popup.css';
-import SidebarAdmin from "./Sidebar";
+import SidebarManager from "./Sidebar_manager";
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
 import logo from "../../assets/LOGO.png";
