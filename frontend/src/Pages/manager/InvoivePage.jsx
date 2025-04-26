@@ -279,7 +279,7 @@ function InvoicePage() {
 
   return (
     <>
-  <SidebarAdmin/>
+  <SidebarManager/>
   <div style={{ marginLeft: "250px" }}>
   <h1>Invoice Page</h1>
   <div className="searching-products" ref={searchRef} style={{ position: "relative", width: "99%" }}>

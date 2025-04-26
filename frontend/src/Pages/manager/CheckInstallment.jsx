@@ -60,7 +60,7 @@ const CheckInstalments = () => {
 
   return (
     <div style={{ display: "flex" }}>
-      <Sidebar />
+      <SidebarManager />
       <div style={{ marginLeft: "250px", padding: "20px", width: "100%" }}>
         <h2>Check Instalments & Unpaid Sales</h2>
         <input

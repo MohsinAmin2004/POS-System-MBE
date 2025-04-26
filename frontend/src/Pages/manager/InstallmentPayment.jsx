@@ -225,7 +225,7 @@ const InstalmentPayment = () => {
 
   return (
     <div>
-       <SidebarAdmin/> 
+       <SidebarManager/> 
       <div style={{marginLeft: "250px"}}>
       <h2>Instalment Payment</h2>
 
