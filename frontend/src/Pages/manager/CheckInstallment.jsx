@@ -7,7 +7,7 @@ const CheckInstalments = () => {
   const [unpaidSales, setUnpaidSales] = useState([]);
   const [loading, setLoading] = useState(false);
   const [suretyInfo, setSuretyInfo] = useState(null);
-  const [shopId, setShopId] = useState("");
+  const shopId = sessionStorage.getItem("shop_id");
 
   const fetchData = async () => {
     setLoading(true);
@@ -18,8 +18,8 @@ const CheckInstalments = () => {
       const instalmentData = await instalmentRes.json();
       const unpaidSalesData = await unpaidSalesRes.json();
 
-      setInstalments(instalmentData);
-      setUnpaidSales(unpaidSalesData);
+      setInstalments(instalmentData.filter(item => item.shop_id === Number(shopId)));
+      setUnpaidSales(unpaidSalesData.filter(item => item.shop_id === Number(shopId)));
     } catch (error) {
       console.error("Error fetching data:", error);
     }
@@ -31,15 +31,13 @@ const CheckInstalments = () => {
   }, []);
 
   const filteredInstalments = instalments.filter((customer) =>
-    (customer.cnic.includes(searchTerm) ||
-      customer.name.toLowerCase().includes(searchTerm.toLowerCase())) &&
-    (shopId === "" || customer.shop_id.toString() === shopId)
+    customer.cnic.includes(searchTerm) ||
+    customer.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   const filteredUnpaidSales = unpaidSales.filter((customer) =>
-    (customer.cnic.includes(searchTerm) ||
-      customer.name.toLowerCase().includes(searchTerm.toLowerCase())) &&
-    (shopId === "" || customer.shop_id.toString() === shopId)
+    customer.cnic.includes(searchTerm) ||
+    customer.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   const checkOverdueStatus = (nextInstalmentDate) => {
@@ -70,13 +68,7 @@ const CheckInstalments = () => {
           onChange={(e) => setSearchTerm(e.target.value)}
           style={{ width: "300px", padding: "8px", marginBottom: "20px", border: "1px solid #ccc", borderRadius: "4px" }}
         />
-        <input
-          type="text"
-          placeholder="Filter by Shop ID"
-          value={shopId}
-          onChange={(e) => setShopId(e.target.value)}
-          style={{ width: "200px", padding: "8px", border: "1px solid #ccc", borderRadius: "4px" }}
-        />
+        
         {loading ? (
           <p>Loading...</p>
         ) : (
@@ -104,7 +96,6 @@ const CheckInstalments = () => {
                   <th>Surety Address</th>
                   <th>Surety Father</th>
                   <th>Surety Occupation</th>
-                  <th>Shop ID</th>
                 </tr>
               </thead>
               <tbody>
@@ -129,8 +120,7 @@ const CheckInstalments = () => {
                     <td>{customer.surety_phone_number}</td>
                     <td>{customer.surety_address}</td>
                     <td>{customer.surety_fathername}</td>
-                    <td>{customer.surety_job}</td>
-                    <td>{customer.shop_id}</td>
+                    <td>{customer.surety_job}</td>                    
                     
                   </tr>
                 ))}
@@ -156,7 +146,6 @@ const CheckInstalments = () => {
                   <th>Surety Address</th>
                   <th>Surety Father</th>
                   <th>Surety Job</th>
-                  <th>Shop ID</th>
 
                 </tr>
               </thead>
@@ -178,7 +167,6 @@ const CheckInstalments = () => {
                     <td>{customer.surety_address}</td>
                     <td>{customer.surety_fathername}</td>
                     <td> {customer.surety_job}</td>
-                    <td>{customer.shop_id}</td>
                     
                   </tr>
                 ))}
