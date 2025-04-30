@@ -46,12 +46,20 @@ function InvoicePage() {
     fetch("https://pos-system-mbe.onrender.com/invoice")
       .then((res) => res.json())
       .then((data) => {
-        setProducts(data.stock);
+        const shopId = sessionStorage.getItem("shop_id"); // Get shop_id from sessionStorage
+        if (!shopId) {
+          console.error("No shop_id found in sessionStorage");
+          return;
+        }
+
+        const filteredProducts = data.stock.filter(
+          (product) => product.shop_id === parseInt(shopId)
+        );
+
+        setProducts(filteredProducts);
         setCustomers(data.customers);
       })
-
-
-      .catch((error) => console.error("Error fetching data:", error));
+      .catch((error) => console.error("Error fetching invoice data:", error));
   }, []);
 
   // Handle Product Search
