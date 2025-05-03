@@ -52,11 +52,60 @@ const SalesTable = () => {
     
     
     }
+    const [searchCustomer, setSearchCustomer] = useState("");
+    const [selectedShop, setSelectedShop] = useState("All");
+    const [selectedPaymentStatus, setSelectedPaymentStatus] = useState("All");
+
+    // Unique shops and statuses for dropdowns
+    const uniqueShops = [...new Set(sales.map(sale => sale.shop_id))];
+    const uniqueStatuses = [...new Set(sales.map(sale => sale.payment_status))];
+
+    // Filter logic
+    const filteredSales = sales.filter(sale => {
+        const matchesShop = selectedShop === "All" || String(sale.shop_id) === selectedShop;
+        const matchesCustomer = sale.customer_name.toLowerCase().includes(searchCustomer.toLowerCase());
+        const matchesStatus = selectedPaymentStatus === "All" || sale.payment_status === selectedPaymentStatus;
+        return matchesShop && matchesCustomer && matchesStatus;
+    });
+
     return (
         <div>
             <SidebarAdmin/>
             <div style={{ marginLeft: "250px" }}>
             <h2>All Sales</h2>
+            <div style={{ marginBottom: "20px" }}>
+                <label>
+                    Filter by Shop ID:
+                    <select value={selectedShop} onChange={(e) => setSelectedShop(e.target.value)} style={{ margin: "0 10px" }}>
+                        <option value="All">All</option>
+                        {uniqueShops.map(shop => (
+                            <option key={shop} value={shop}>{shop}</option>
+                        ))}
+                    </select>
+                </label>
+
+                <label>
+                    Payment Status:
+                    <select value={selectedPaymentStatus} onChange={(e) => setSelectedPaymentStatus(e.target.value)} style={{ margin: "0 10px" }}>
+                        <option value="All">All</option>
+                        {uniqueStatuses.map(status => (
+                            <option key={status} value={status}>{status}</option>
+                        ))}
+                    </select>
+                </label>
+
+                <label>
+                    Search Customer:
+                    <input
+                        type="text"
+                        placeholder="Enter customer name"
+                        value={searchCustomer}
+                        onChange={(e) => setSearchCustomer(e.target.value)}
+                        style={{ marginLeft: "10px", padding: "5px" }}
+                    />
+                </label>
+            </div>
+
             <table border="1">
                 <thead>
                     <tr>
@@ -67,19 +116,23 @@ const SalesTable = () => {
                         <th>Payment Status</th>
                         <th>Date</th>
                         <th>Sold By</th>
+                        <th>Shop</th>
                         <th>Action</th>
+                        
                     </tr>
                 </thead>
                 <tbody>
-                    {sales.map(sale => (
+                {filteredSales.map(sale => (
+
                         <tr key={sale.sale_id}>
                             <td>{sale.sale_id}</td>
                             <td>{sale.customer_name}</td>
                             <td>{sale.phone_number}</td>
                             <td>{sale.total_payable}</td>
                             <td>{sale.payment_status}</td>
-                            <td>{sale.date_of_selling}</td>
+                            <td>{new Date(sale.date_of_selling).toLocaleDateString()}</td>
                             <td>{sale.sold_by}</td>
+                            <td>{sale.shop_id}</td>
                             <td>
                                 <button onClick={() => viewSaleDetails(sale.sale_id)}>View</button>
                             </td>
