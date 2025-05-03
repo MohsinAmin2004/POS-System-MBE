@@ -574,6 +574,7 @@ function AdminInvoicePage() {
           <p><strong>Address:</strong> {selectedCustomer.address}</p>
           <p><strong>Father:</strong> {selectedCustomer.fathername}</p>
           <p><strong>Job:</strong> {selectedCustomer.job}</p>
+          <p><strong>Date:</strong> {new Date().toISOString().split('T')[0]}</p>
         </div>
       ) : (
         <p>No customer selected</p>

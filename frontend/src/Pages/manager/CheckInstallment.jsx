@@ -150,7 +150,9 @@ const CheckInstalments = () => {
                 </tr>
               </thead>
               <tbody>
-                {filteredUnpaidSales.map((customer) => (
+              {filteredUnpaidSales
+                  .filter((customer) => Number(customer.total_unpaid_amount) > 0)
+                  .map((customer) => (
                   <tr key={customer.unpaid_id} style={{ textAlign: "center" }}>
                     <td>{customer.unpaid_id}</td>
                     <td>{customer.sale_id}</td>
