@@ -11,23 +11,23 @@ const PORT = process.env.PORT || 5000;
 
 const SECRET_KEY = process.env.JWT_SECRET || "your_super_secret_key";
 
-// const client = new Client({
-//     host: process.env.DB_HOST,
-//     user: process.env.DB_USER,
-//     port: process.env.DB_PORT,
-//     password: process.env.DB_PASSWORD,
-//     database: process.env.DB_NAME,
-//     ssl: process.env.DB_SSL === "true" ? { rejectUnauthorized: false } : false
-// });
-
 const client = new Client({
-    host: "localhost",
-    user: "postgres",
-    port: 5432,
-    password: "pass",
-    database: "Malik_Brother_Electronics"
-    // ssl: process.env.DB_SSL === "true" ? { rejectUnauthorized: false } : false
+    host: process.env.DB_HOST,
+    user: process.env.DB_USER,
+    port: process.env.DB_PORT,
+    password: process.env.DB_PASSWORD,
+    database: process.env.DB_NAME,
+    ssl: process.env.DB_SSL === "true" ? { rejectUnauthorized: false } : false
 });
+
+// const client = new Client({
+//     host: "localhost",
+//     user: "postgres",
+//     port: 5432,
+//     password: "pass",
+//     database: "Malik_Brother_Electronics"
+//     // ssl: process.env.DB_SSL === "true" ? { rejectUnauthorized: false } : false
+// });
 
 
 client.connect()
