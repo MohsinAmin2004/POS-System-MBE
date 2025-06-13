@@ -8,7 +8,7 @@ const API_BASE_URL = "https://pos-system-mbe.onrender.com"; // Your backend URL
 const InstalmentPayment = () => {
   const [instalmentId, setInstalmentId] = useState("");
   const [instalmentData, setInstalmentData] = useState(null);
-  const [instalmentsToPay, setInstalmentsToPay] = useState("");
+  const [paymentAmount, setPaymentAmount] = useState("");
   const [billSearchTerm, setBillSearchTerm] = useState("");
   const [bill, setBill] = useState(null);
   const [showReceipt, setShowReceipt] = useState(false);
@@ -16,12 +16,15 @@ const InstalmentPayment = () => {
   const [showUnpaidBillReceipt, setShowUnpaidBillReceipt] = useState(false);
   const [unpaidreceiptData, setUnpaidReceiptData] = useState(null);
   const printRef = useRef();
+  
+  
 
   // Fetch installment details by installment ID
   const handleSearch = async () => {
     try {
       const response = await fetch(`${API_BASE_URL}/instalment/${instalmentId}`);
       const data = await response.json();
+      console.log(data);
 
       if (!response.ok) {
         alert(data.error);
@@ -37,55 +40,59 @@ const InstalmentPayment = () => {
   };
 
   // Handle installment payment
-  const handlePayment = async () => {
-    if (!instalmentData || !instalmentsToPay) return;
+  // Replace entire handlePayment function (lines 49-92)
+const handlePayment = async () => {
+  if (!instalmentData || !paymentAmount) return;
 
-    const instalmentsPaid = parseInt(instalmentsToPay, 10);
-    if (instalmentsPaid <= 0 || instalmentsPaid > instalmentData.total_instalments) {
-      alert("Invalid installment count");
+  const payment = parseFloat(paymentAmount);
+  if (payment <= 0) {
+    alert("Payment amount must be positive");
+    return;
+  }
+
+  try {
+    const response = await fetch(`${API_BASE_URL}/pay-instalment`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        instalment_id: instalmentData.instalment_id,
+        sale_id: instalmentData.sale_id,
+        cnic: instalmentData.cnic,
+        payment_amount: payment,
+      }),
+    });
+
+    const result = await response.json();
+    if (!response.ok) {
+      alert(result.error);
       return;
     }
 
-    try {
-      const response = await fetch(`${API_BASE_URL}/pay-instalment`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          instalment_id: instalmentData.instalment_id,
-          sale_id: instalmentData.sale_id,
-          cnic: instalmentData.cnic,
-          instalments_paid: instalmentsPaid,
-        }),
-      });
+    alert("Payment successful!");
 
-      const result = await response.json();
-      if (!response.ok) {
-        alert(result.error);
-        return;
-      }
-
-      alert("Payment successful!");
-
-      // Show receipt with relevant info
-      setReceiptData({
-        instalment_id: instalmentData.instalment_id,
-        sale_id: instalmentData.sale_id,
-        name: instalmentData.name,
-        cnic: instalmentData.cnic,
-        instalments_paid: instalmentsPaid,
-        total_amount_paid: instalmentsPaid * instalmentData.total_instalment_amount,
-        date: new Date().toLocaleString(),
-      });
-      setShowReceipt(true);
-
-      setInstalmentData(null);
-      setInstalmentsToPay("");
-    } catch (error) {
-      console.error("Payment error:", error);
-      alert("Payment failed.");
-    }
-  };
-
+    // Update receipt data with new fields
+    setReceiptData({
+      instalment_id: instalmentData.instalment_id,
+      sale_id: instalmentData.sale_id,
+      name: instalmentData.name,
+      cnic: instalmentData.cnic,
+      payment_amount: payment,
+      date: new Date().toLocaleString(),
+      new_installment_amount: result.new_installment_amount,
+      remaining_balance: result.remaining_balance,
+      next_due_date: result.next_due_date,
+      installments_covered: result.installments_covered,
+      overpayment: result.overpayment || 0
+    });
+    
+    setShowReceipt(true);
+    setInstalmentData(null);
+    setPaymentAmount("");
+  } catch (error) {
+    console.error("Payment error:", error);
+    alert("Payment failed.");
+  }
+};
   // Fetch unpaid bill details by Sale ID or CNIC
   const handleBillSearch = async () => {
     try {
@@ -148,25 +155,27 @@ const InstalmentPayment = () => {
       alert("Failed to settle bill.");
     }
   };
-
+  
   const handlePrintReceipt = async () => {
-    const element = printRef.current;
-    if (!element) return;
+  const element = printRef.current;
+  if (!element) return;
 
-    const canvas = await html2canvas(element);
-    const data = canvas.toDataURL('image/png');
+  const canvas = await html2canvas(element);
+  const data = canvas.toDataURL('image/png');
 
-    const pdf = new jsPDF({
-      orientation: 'portrait',
-      unit: 'px',
-      format: 'a4'
-    });
+  const pdf = new jsPDF({
+    orientation: 'portrait',
+    unit: 'px',
+    format: 'a4'
+  });
 
-    pdf.addImage(data, 'PNG', 40, 10, 250, 300);
-    pdf.save('receipt.pdf');
-  };
+  pdf.addImage(data, 'PNG', 40, 10, 250, 300);
+  pdf.save('receipt.pdf');
+};
 
-  const ProductsTable = ({ saleId }) => {
+
+// ProductsTable component remains unchanged
+const ProductsTable = ({ saleId }) => {
     const [products, setProducts] = useState([]);
     const [date, setDate] = useState([]);
   
@@ -268,12 +277,12 @@ const InstalmentPayment = () => {
 
       {instalmentData && (
         <div style={{ marginTop: "20px" }}>
-          <h3>Pay Instalments</h3>
+          <h3>Make Payment</h3>
           <input
             type="number"
-            placeholder="Enter instalments to pay"
-            value={instalmentsToPay}
-            onChange={(e) => setInstalmentsToPay(e.target.value)}
+            placeholder="Enter payment amount"
+            value={paymentAmount}
+            onChange={(e) => setPaymentAmount(e.target.value)}
           />
           <button onClick={handlePayment}>Pay</button>
         </div>
@@ -314,11 +323,11 @@ const InstalmentPayment = () => {
       )}
 
       {/* Receipt Popup for Instalments */}
-      {showReceipt && receiptData && (
+       {showReceipt && receiptData && (
       <div className="invoice-popup">
         <div className="popup-content">
           <h2>Payment Receipt</h2>
-
+          
           <div ref={printRef} className="receipt" style={{ backgroundColor: "white", padding: "20px" }}>
             <div style={{ textAlign: "center" }}>
               <img src={logo} alt="Company Logo" width={150} height={150} />
@@ -328,8 +337,8 @@ const InstalmentPayment = () => {
             <p><strong>Sale ID:</strong> {receiptData.sale_id}</p>
             <p><strong>Name:</strong> {receiptData.name}</p>
             <p><strong>CNIC:</strong> {receiptData.cnic}</p>
-            <p><strong>Instalments Paid:</strong> {receiptData.instalments_paid}</p>
-            <p><strong>Total Amount Paid:</strong> {receiptData.total_amount_paid} PKR</p>
+            <p><strong>Instalments Paid:</strong> {receiptData.installments_covered === 0 ? 1 : receiptData.installments_covered}</p>
+            <p><strong>Total Amount Paid:</strong> {receiptData.payment_amount} PKR</p>
             <p><strong>Payment Date:</strong> {receiptData.date}</p>
 
             {/* New: Products Table */}

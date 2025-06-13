@@ -3,6 +3,7 @@ const cors = require("cors");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const { Client } = require("pg");
+const { DateTime } = require('luxon');
 
 require("dotenv").config();
 const app = express();
@@ -10,23 +11,23 @@ const PORT = process.env.PORT || 5000;
 
 const SECRET_KEY = process.env.JWT_SECRET || "your_super_secret_key";
 
-const client = new Client({
-    host: process.env.DB_HOST,
-    user: process.env.DB_USER,
-    port: process.env.DB_PORT,
-    password: process.env.DB_PASSWORD,
-    database: process.env.DB_NAME,
-    ssl: process.env.DB_SSL === "true" ? { rejectUnauthorized: false } : false
-});
-
 // const client = new Client({
-//     host: "localhost",
-//     user: "postgres",
-//     port: 5432,
-//     password: "pass",
-//     database: "Malik_Brother_Electronics"
-//     // ssl: process.env.DB_SSL === "true" ? { rejectUnauthorized: false } : false
+//     host: process.env.DB_HOST,
+//     user: process.env.DB_USER,
+//     port: process.env.DB_PORT,
+//     password: process.env.DB_PASSWORD,
+//     database: process.env.DB_NAME,
+//     ssl: process.env.DB_SSL === "true" ? { rejectUnauthorized: false } : false
 // });
+
+const client = new Client({
+    host: "localhost",
+    user: "postgres",
+    port: 5432,
+    password: "pass",
+    database: "Malik_Brother_Electronics"
+    // ssl: process.env.DB_SSL === "true" ? { rejectUnauthorized: false } : false
+});
 
 
 client.connect()
@@ -808,7 +809,7 @@ app.get("/instalment/:instalmentId", async (req, res) => {
     try {
         const { instalmentId } = req.params;
         const result = await client.query(
-            "SELECT * FROM instalments WHERE instalment_id = $1",
+            "SELECT i.*, C.name FROM instalments i right join CUSTOMERS C on i.cnic = C.cnic WHERE instalment_id = $1",
             [instalmentId]
         );
 
@@ -826,53 +827,251 @@ app.get("/instalment/:instalmentId", async (req, res) => {
  * POST /pay-instalment
  * Process instalment payment
  */
+// app.post("/pay-instalment", async (req, res) => {
+//     try {
+//         const { instalment_id, sale_id, cnic, instalments_paid } = req.body;
+
+//         // Fetch current instalment details
+//         const instalmentResult = await client.query(
+//             "SELECT * FROM instalments WHERE instalment_id = $1",
+//             [instalment_id]
+//         );
+
+//         if (instalmentResult.rows.length === 0) {
+//             return res.status(404).json({ error: "Instalment not found" });
+//         }
+
+//         const instalment = instalmentResult.rows[0];
+
+//         const newTotalLoan =
+//             instalment.total_loan - instalment.total_instalment_amount * instalments_paid;
+//         const newTotalInstalments = instalment.total_instalments - instalments_paid;
+//         const newNextInstalmentDate = new Date(instalment.next_instalment_date);
+//         newNextInstalmentDate.setMonth(newNextInstalmentDate.getMonth() + instalments_paid);
+
+//         // Update instalment record
+//         await client.query(
+//             "UPDATE instalments SET total_loan = $1, total_instalments = $2, next_instalment_date = $3 WHERE instalment_id = $4",
+//             [
+//                 newTotalLoan,
+//                 newTotalInstalments,
+//                 newNextInstalmentDate.toISOString().split("T")[0],
+//                 instalment_id,
+//             ]
+//         );
+
+//         // Insert into instalment_payments table
+//         await client.query(
+//             "INSERT INTO instalment_payments (sale_id, cnic, payment_date, next_instalment_date, payment_amount, remaining_balance) VALUES ($1, $2, $3, $4, $5, $6)",
+//             [
+//                 sale_id,
+//                 cnic,
+//                 new Date().toISOString().split("T")[0],
+//                 newNextInstalmentDate.toISOString().split("T")[0],
+//                 instalment.total_instalment_amount * instalments_paid,
+//                 newTotalLoan,
+//             ]
+//         );
+
+//         res.json({ message: "Instalment payment successful!" });
+//     } catch (error) {
+//         res.status(500).json({ error: error.message });
+//     }
+// });
+
+function addMonthsToDate(date, monthsToAdd) {
+    const newDate = new Date(date);
+    const year = newDate.getFullYear();
+    const month = newDate.getMonth();
+    const day = newDate.getDate();
+
+    // Calculate target month and year
+    const targetMonth = month + monthsToAdd;
+    const targetYear = year + Math.floor(targetMonth / 12);
+    const normalizedMonth = targetMonth % 12;
+
+    // Set to first of target month, then adjust to same day (or closest possible)
+    const result = new Date(targetYear, normalizedMonth, 1);
+    const maxDays = new Date(targetYear, normalizedMonth + 1, 0).getDate(); // last day of that month
+    result.setDate(Math.min(day, maxDays));
+
+    return result;
+}
+
+
 app.post("/pay-instalment", async (req, res) => {
     try {
-        const { instalment_id, sale_id, cnic, instalments_paid } = req.body;
-
+        const { instalment_id, sale_id, cnic, payment_amount } = req.body;
+        console.log(instalment_id);
         // Fetch current instalment details
         const instalmentResult = await client.query(
             "SELECT * FROM instalments WHERE instalment_id = $1",
             [instalment_id]
         );
 
+        console.log(instalmentResult.rows[0]);
+
         if (instalmentResult.rows.length === 0) {
             return res.status(404).json({ error: "Instalment not found" });
         }
+        
 
         const instalment = instalmentResult.rows[0];
+        console.log(instalment);
+        const payment = parseFloat(payment_amount);
 
-        const newTotalLoan =
-            instalment.total_loan - instalment.total_instalment_amount * instalments_paid;
-        const newTotalInstalments = instalment.total_instalments - instalments_paid;
-        const newNextInstalmentDate = new Date(instalment.next_instalment_date);
-        newNextInstalmentDate.setMonth(newNextInstalmentDate.getMonth() + instalments_paid);
+        // Validate payment amount
+        if (payment <= 0) {
+            return res.status(400).json({ error: "Payment amount must be positive" });
+        }
 
+        // Calculate new loan balance
+        const newTotalLoan = instalment.total_loan - payment;
+        const paidOff = newTotalLoan <= 0;
+        
+        // Calculate installments covered by this payment
+        console.log('payment: ', payment);
+        console.log('instalment.total_instalment_amount: ',instalment.total_instalment_amount);
+        console.log('instalment.total_instalments: ', instalment.total_instalments);
+
+        const installmentsCovered = Math.min(
+            Math.floor(payment / instalment.total_instalment_amount),
+            instalment.total_instalments
+        );
+        
+        // Calculate remaining installments after payment
+        const newTotalInstallments = instalment.total_instalments - installmentsCovered;
+        
+        // Calculate new due date
+        // 1. FIXED DATE INITIALIZATION
+        let newNextInstalmentDate = instalment.next_instalment_date 
+          ? new Date(instalment.next_instalment_date)
+          : new Date();
+
+        
+
+        // 2. VALIDATE DATE BEFORE MANIPULATION
+        if (isNaN(newNextInstalmentDate.getTime())) {
+          newNextInstalmentDate = new Date();
+        }
+        console.log("Mein Sb se oper wala ho'n", newNextInstalmentDate);
+        newNextInstalmentDate = addMonthsToDate(newNextInstalmentDate, installmentsCovered);
+        if (newNextInstalmentDate instanceof Date) {
+            console.log("It is a Date object");
+        } else {
+            console.log("It is NOT a Date object");
+        }
+
+        console.log("Mein Sb se oper wala ho'n", newNextInstalmentDate);
+
+
+        // Handle full payoff
+        if (paidOff) {
+            const actualPayment = instalment.total_loan;
+            const overpayment = payment - actualPayment;
+            console.log("Entered in Paid Off Section");
+            // Update instalment record
+            await client.query('BEGIN');
+            await client.query(
+                `UPDATE instalments 
+                 SET total_loan = 0, 
+                     total_instalments = 0,
+                     next_instalment_date = NULL,
+                     total_instalment_amount = 0
+                 WHERE instalment_id = $1`,
+                [instalment_id]
+            );
+            console.log("Query 1 executed for instalments in paid off section");
+
+            // Record payment
+            await client.query(
+                `INSERT INTO instalment_payments (
+                    sale_id, cnic, payment_date, 
+                    next_instalment_date, payment_amount, 
+                    remaining_balance
+                 ) VALUES ($1, $2, $3, $4, $5, $6)`,
+                [
+                    sale_id,
+                    cnic,
+                    new Date().toISOString().split("T")[0],
+                    null,
+                    actualPayment,
+                    0
+                ]
+            );
+            console.log("Query 2 executed for instalment payment in paid off section");
+            await client.query('COMMIT');
+
+            return res.json({ 
+                message: "Loan fully paid off!",
+                overpayment: overpayment > 0 ? overpayment : 0
+            });
+        }
+
+        // Calculate new installment amount
+        const newInstallmentAmount = newTotalLoan / newTotalInstallments;
+
+        // 3. FIXED FINAL DUE DATE HANDLING
+        let finalInstallments = newTotalInstallments;
+        let finalInstallmentAmount = newInstallmentAmount;
+        let finalDueDate = new Date(newNextInstalmentDate); // Clone the date
+        console.log(finalDueDate);
+        
+        if (finalInstallments === 0 && newTotalLoan > 10) {
+            finalInstallments = 1;
+            finalInstallmentAmount = newTotalLoan;
+            
+            // Validate before manipulation
+            if (isNaN(finalDueDate.getTime())) {
+                finalDueDate = new Date();
+            }
+            finalDueDate.setMonth(finalDueDate.getMonth() + 1);
+        }
+
+        console.log("Updating instalment records check 1");
+        console.log(finalDueDate);
         // Update instalment record
         await client.query(
-            "UPDATE instalments SET total_loan = $1, total_instalments = $2, next_instalment_date = $3 WHERE instalment_id = $4",
+            `UPDATE instalments 
+             SET total_loan = $1, 
+                 total_instalments = $2,
+                 total_instalment_amount = $3,
+                 next_instalment_date = $4
+             WHERE instalment_id = $5`,
             [
                 newTotalLoan,
-                newTotalInstalments,
-                newNextInstalmentDate.toISOString().split("T")[0],
-                instalment_id,
+                finalInstallments,
+                finalInstallmentAmount,
+                finalDueDate.toISOString().split("T")[0],
+                instalment_id
             ]
         );
 
-        // Insert into instalment_payments table
+        console.log("Updating instalment payment records check 2");
+        // Record payment
         await client.query(
-            "INSERT INTO instalment_payments (sale_id, cnic, payment_date, next_instalment_date, payment_amount, remaining_balance) VALUES ($1, $2, $3, $4, $5, $6)",
+            `INSERT INTO instalment_payments (
+                sale_id, cnic, payment_date, 
+                next_instalment_date, payment_amount, 
+                remaining_balance
+             ) VALUES ($1, $2, $3, $4, $5, $6)`,
             [
                 sale_id,
                 cnic,
                 new Date().toISOString().split("T")[0],
-                newNextInstalmentDate.toISOString().split("T")[0],
-                instalment.total_instalment_amount * instalments_paid,
-                newTotalLoan,
+                finalDueDate.toISOString().split("T")[0],
+                payment,
+                newTotalLoan
             ]
         );
-
-        res.json({ message: "Instalment payment successful!" });
+        console.log("Updating instalment records checks done");
+        res.json({ 
+            message: "Payment successful!",
+            new_installment_amount: finalInstallmentAmount,
+            remaining_balance: newTotalLoan,
+            next_due_date: finalDueDate.toISOString().split("T")[0],
+            installments_covered: installmentsCovered
+        });
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
