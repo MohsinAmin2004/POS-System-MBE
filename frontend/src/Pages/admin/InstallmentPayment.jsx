@@ -4,7 +4,8 @@ import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
 import logo from "../../assets/LOGO.png"; // Adjust path based on your folder structure
 const API_BASE_URL = "https://pos-system-mbe.onrender.com"; // Your backend URL
-
+// const API_BASE_URL = "http://localhost:5000"; // Your backend URL
+let instalments_remaining = 0;
 const AdminInstalmentPayment = () => {
   const [instalmentId, setInstalmentId] = useState("");
   const [instalmentData, setInstalmentData] = useState(null);
@@ -49,7 +50,7 @@ const handlePayment = async () => {
     alert("Payment amount must be positive");
     return;
   }
-
+  
   try {
     const response = await fetch(`${API_BASE_URL}/pay-instalment`, {
       method: "POST",
@@ -82,7 +83,8 @@ const handlePayment = async () => {
       remaining_balance: result.remaining_balance,
       next_due_date: result.next_due_date,
       installments_covered: result.installments_covered,
-      overpayment: result.overpayment || 0
+      overpayment: result.overpayment || 0,
+      instalments_remaining: instalmentData.total_instalments
     });
     
     setShowReceipt(true);
@@ -338,6 +340,7 @@ const ProductsTable = ({ saleId }) => {
             <p><strong>Name:</strong> {receiptData.name}</p>
             <p><strong>CNIC:</strong> {receiptData.cnic}</p>
             <p><strong>Instalments Paid:</strong> {receiptData.installments_covered === 0 ? 1 : receiptData.installments_covered}</p>
+            <p><strong>Instalments Remaining:</strong> {receiptData.installments_covered === 0 ? receiptData.instalments_remaining : receiptData.instalments_remaining -1}</p>
             <p><strong>Total Amount Paid:</strong> {receiptData.payment_amount} PKR</p>
             <p><strong>Payment Date:</strong> {receiptData.date}</p>
 

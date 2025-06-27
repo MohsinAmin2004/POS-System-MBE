@@ -121,8 +121,8 @@ const AdminCheckInstalments = () => {
                     <td>{customer.next_instalment_date?.split("T")[0] || "N/A"}</td>
                     <td>{customer.total_instalment_amount}</td>
                     <td>{Number(customer.total_loan || 0).toFixed(2)}</td>
-                    <td style={{ color: checkOverdueStatus(customer.next_instalment_date) === "Overdue" ? "red" : "green" }}>
-                      {checkOverdueStatus(customer.next_instalment_date)}
+                    <td style={{ color: Number(customer.total_loan) < 10 ? "green" : (checkOverdueStatus(customer.next_instalment_date) === "Overdue" ? "red" : "green") }}>
+                    {Number(customer.total_loan) < 10 ? "Paid" : checkOverdueStatus(customer.next_instalment_date)}
                     </td>
                     <td>{customer.surety_name}</td>
                     <td>{customer.surety_cnic}</td>
