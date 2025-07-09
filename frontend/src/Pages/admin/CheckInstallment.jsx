@@ -8,6 +8,8 @@ const AdminCheckInstalments = () => {
   const [loading, setLoading] = useState(false);
   const [suretyInfo, setSuretyInfo] = useState(null);
   const [shopId, setShopId] = useState("");
+  const [statusFilter, setStatusFilter] = useState("");
+
 
   const fetchData = async () => {
     setLoading(true);
@@ -26,27 +28,35 @@ const AdminCheckInstalments = () => {
     setLoading(false);
   };
 
+  const checkOverdueStatus = (nextInstalmentDate) => {
+    const today = new Date();
+    const instalmentDate = new Date(nextInstalmentDate);
+    return instalmentDate < today ? "Overdue" : "On Time";
+  };
+
   useEffect(() => {
     fetchData();
   }, []);
 
-  const filteredInstalments = instalments.filter((customer) =>
-    (customer.cnic.includes(searchTerm) ||
-      customer.name.toLowerCase().includes(searchTerm.toLowerCase())) &&
-    (shopId === "" || customer.shop_id.toString() === shopId)
-  );
+  const filteredInstalments = instalments.filter((customer) => {
+  const nameMatch = customer.cnic.includes(searchTerm) || customer.name.toLowerCase().includes(searchTerm.toLowerCase());
+  const shopMatch = shopId === "" || customer.shop_id.toString() === shopId;
+
+  const actualStatus = Number(customer.total_loan) < 10
+    ? "Paid"
+    : checkOverdueStatus(customer.next_instalment_date);
+
+  const statusMatch = statusFilter === "" || actualStatus === statusFilter;
+
+  return nameMatch && shopMatch && statusMatch;
+});
+
 
   const filteredUnpaidSales = unpaidSales.filter((customer) =>
     (customer.cnic.includes(searchTerm) ||
       customer.name.toLowerCase().includes(searchTerm.toLowerCase())) &&
     (shopId === "" || customer.shop_id.toString() === shopId)
   );
-
-  const checkOverdueStatus = (nextInstalmentDate) => {
-    const today = new Date();
-    const instalmentDate = new Date(nextInstalmentDate);
-    return instalmentDate < today ? "Overdue" : "On Time";
-  };
 
   const viewSuretyInfo = (surety) => {
     setSuretyInfo(surety);
@@ -77,6 +87,18 @@ const AdminCheckInstalments = () => {
           onChange={(e) => setShopId(e.target.value)}
           style={{ width: "200px", padding: "8px", border: "1px solid #ccc", borderRadius: "4px" }}
         />
+
+        <select
+          value={statusFilter}
+          onChange={(e) => setStatusFilter(e.target.value)}
+          style={{ padding: "8px", border: "1px solid #ccc", borderRadius: "4px", marginLeft: "10px" }}
+        >
+          <option value="">All Statuses</option>
+          <option value="Paid">Paid</option>
+          <option value="Overdue">Overdue</option>
+          <option value="On Time">On Time</option>
+        </select>
+
         {loading ? (
           <p>Loading...</p>
         ) : (
