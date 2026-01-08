@@ -19,6 +19,7 @@ import GeneralLedger from './Pages/admin/Ledger';
 import AdminInstalmentPayment from './Pages/admin/InstallmentPayment';
 import AdminEditStockSellingHistory from './Pages/admin/EditStockSellingHistory';
 import ManagerGeneralLedger from './Pages/manager/GeneralLedger';
+import SalesReport from './Pages/admin/ReportingPage';
 
 
 function App() {
@@ -46,6 +47,8 @@ function App() {
           <Route path='/admin-stock-selling-history' element={<AdminStockSellingHistory/>} />
           <Route path='/admin-ledger' element={<GeneralLedger/>} />
           <Route path='/admin-edit-stock-selling-history' element={<AdminEditStockSellingHistory/>} />
+          <Route path='/admin-selling-report' element={<SalesReport/>} />
+
         </Routes>
       </Router>
     </>

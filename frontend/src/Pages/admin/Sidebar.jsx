@@ -37,6 +37,7 @@ function SidebarAdmin() {
         <li><Link to="/admin-Instalment-payment">Instalments and Unapid Sales Payment</Link></li>
         <li><Link to="/admin-invoice">Invoice</Link></li>
         <li><Link to="/admin-ledger">General Ledger</Link></li>
+        <li><Link to="/admin-selling-report">Sales Report</Link></li>
         <li>
           <Link to="/" onClick={() => {
             sessionStorage.removeItem("admin");

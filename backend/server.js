@@ -195,6 +195,70 @@ app.get('/stock', async (req, res) => {
     }
 });
 
+// New QUery for Reporting
+// Route: Get Sales Report (Yearly, Monthly, or Daily)
+app.get("/sales-report", async (req, res) => {
+    const { year, month, day } = req.query;
+
+    // Validate that at least the year is provided
+    if (!year) {
+        return res.status(400).json({ error: "Year is required" });
+    }
+
+    try {
+        // Base SQL Query
+        let sqlQuery = `
+            SELECT 
+                sh.name AS shop_name,
+                st.name AS product_name,
+                st.brand,
+                si.model,
+                SUM(si.quantity) AS quantity_sold,
+                SUM(si.total_revenue) AS total_selling_price,
+                SUM(si.quantity * st.purchasing_price) AS total_purchasing_price,
+                s.payment_status AS sale_type
+            FROM public.sales s
+            JOIN public.sale_items si ON s.sale_id = si.sale_id
+            JOIN public.stock st ON si.model = st.model
+            JOIN public.shops sh ON s.shop_id = sh.shop_id
+            WHERE EXTRACT(YEAR FROM s.date_of_selling) = $1
+        `;
+
+        // Parameters array for secure query execution
+        const queryParams = [year];
+        let paramCounter = 2; // Start from $2 since $1 is year
+
+        // Dynamic Filtering: Add Month if provided
+        if (month) {
+            sqlQuery += ` AND EXTRACT(MONTH FROM s.date_of_selling) = $${paramCounter}`;
+            queryParams.push(month);
+            paramCounter++;
+        }
+
+        // Dynamic Filtering: Add Day if provided
+        if (day) {
+            sqlQuery += ` AND EXTRACT(DAY FROM s.date_of_selling) = $${paramCounter}`;
+            queryParams.push(day);
+            paramCounter++;
+        }
+
+        // Add Group By and Order By
+        sqlQuery += `
+            GROUP BY 
+                sh.name, st.name, st.brand, si.model, s.payment_status
+            ORDER BY 
+                sh.name, st.name;
+        `;
+
+        const result = await client.query(sqlQuery, queryParams);
+        res.json(result.rows);
+
+    } catch (error) {
+        console.error("Error fetching sales report:", error);
+        res.status(500).json({ error: "Internal server error" });
+    }
+});
+
 // Get stock details for a specific shop
 app.get('/stock/:shop_id', async (req, res) => {
     const { shop_id } = req.params;
