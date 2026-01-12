@@ -1,5 +1,8 @@
 import React, { useState, useEffect } from "react";
-import SidebarManager from "./Sidebar";
+import Sidebar from "./Sidebar";
+import { jsPDF } from "jspdf";
+import "jspdf-autotable";
+import autoTable from "jspdf-autotable"; // Import the function directly
 
 const SalesReport = () => {
   // --- State for API Request (Timeline) ---
@@ -18,8 +21,8 @@ const SalesReport = () => {
     paymentStatus: "",
     shopName: "",
     brand: "",
-    productName: "", // Column specific search
-    model: ""        // Column specific search
+    productName: "", 
+    model: ""        
   });
 
   // --- KPI State ---
@@ -38,7 +41,6 @@ const SalesReport = () => {
 
     setLoading(true);
     try {
-      // Build Query String
       let query = `?year=${timeline.year}`;
       if (timeline.month) query += `&month=${timeline.month}`;
       if (timeline.day) query += `&day=${timeline.day}`;
@@ -61,23 +63,11 @@ const SalesReport = () => {
   // --- Filtering Logic ---
   const getFilteredData = () => {
     return reportData.filter((item) => {
-      // 1. Payment Type Filter
       const statusMatch = filters.paymentStatus === "" || item.sale_type === filters.paymentStatus;
-      
-      // 2. Shop Name Filter
       const shopMatch = filters.shopName === "" || item.shop_name === filters.shopName;
-
-      // 3. Brand Filter (Search)
-      const brandMatch = filters.brand === "" || 
-        item.brand.toLowerCase().includes(filters.brand.toLowerCase());
-
-      // 4. Column Search: Product Name
-      const productMatch = filters.productName === "" || 
-        item.product_name.toLowerCase().includes(filters.productName.toLowerCase());
-
-      // 5. Column Search: Model
-      const modelMatch = filters.model === "" || 
-        item.model.toLowerCase().includes(filters.model.toLowerCase());
+      const brandMatch = filters.brand === "" || item.brand.toLowerCase().includes(filters.brand.toLowerCase());
+      const productMatch = filters.productName === "" || item.product_name.toLowerCase().includes(filters.productName.toLowerCase());
+      const modelMatch = filters.model === "" || item.model.toLowerCase().includes(filters.model.toLowerCase());
 
       return statusMatch && shopMatch && brandMatch && productMatch && modelMatch;
     });
@@ -85,7 +75,7 @@ const SalesReport = () => {
 
   const filteredData = getFilteredData();
 
-  // --- KPI Calculation (Based on Filtered Data) ---
+  // --- KPI Calculation ---
   useEffect(() => {
     const totalSell = filteredData.reduce((sum, item) => sum + Number(item.total_selling_price || 0), 0);
     const totalBuy = filteredData.reduce((sum, item) => sum + Number(item.total_purchasing_price || 0), 0);
@@ -95,8 +85,62 @@ const SalesReport = () => {
       totalPurchasing: totalBuy,
       totalProfit: totalSell - totalBuy
     });
-  }, [filters, reportData]); // Recalculate when filters or data change
+  }, [filters, reportData]);
 
+// --- PDF Generation Function ---
+  const generatePDF = () => {
+    const doc = new jsPDF('l', 'mm', 'a4'); // 'l' = landscape, 'mm' = units, 'a4' = format
+
+    // 1. Add Title
+    doc.setFontSize(18);
+    doc.text("Malik Brothers Electronics", 14, 20);
+    
+    // 2. Add Dynamic Subtitle (Period)
+    doc.setFontSize(12);
+    let periodText = `Sales Report for Year: ${timeline.year}`;
+    if(timeline.month) periodText += ` | Month: ${timeline.month}`;
+    if(timeline.day) periodText += ` | Day: ${timeline.day}`;
+    doc.text(periodText, 14, 28);
+
+    // 3. Add KPI Summary in PDF
+    doc.setFontSize(10);
+    doc.text(`Total Revenue: ${kpis.totalSelling.toLocaleString()}`, 14, 36);
+    doc.text(`Total Cost: ${kpis.totalPurchasing.toLocaleString()}`, 80, 36);
+    doc.text(`Net Profit: ${kpis.totalProfit.toLocaleString()}`, 150, 36);
+
+    // 4. Create Table Data
+    const tableColumn = ["Shop", "Product", "Model", "Brand", "Qty", "Type", "Cost", "Revenue", "Profit"];
+    const tableRows = [];
+
+    filteredData.forEach(item => {
+      const profit = Number(item.total_selling_price) - Number(item.total_purchasing_price);
+      const rowData = [
+        item.shop_name,
+        item.product_name,
+        item.model,
+        item.brand,
+        item.quantity_sold,
+        item.sale_type,
+        Number(item.total_purchasing_price).toLocaleString(),
+        Number(item.total_selling_price).toLocaleString(),
+        profit.toLocaleString()
+      ];
+      tableRows.push(rowData);
+    });
+
+    // 5. Generate Table (Using Functional Approach)
+    autoTable(doc, {
+      head: [tableColumn],
+      body: tableRows,
+      startY: 45, 
+      theme: 'grid',
+      styles: { fontSize: 9 },
+      headStyles: { fillColor: [22, 160, 133] } 
+    });
+
+    // 6. Save the PDF
+    doc.save(`Sales_Report_${timeline.year}.pdf`);
+  };
   // --- Handlers ---
   const handleTimelineChange = (e) => {
     setTimeline({ ...timeline, [e.target.name]: e.target.value });
@@ -106,12 +150,11 @@ const SalesReport = () => {
     setFilters({ ...filters, [e.target.name]: e.target.value });
   };
 
-  // Extract Unique Shop Names for Dropdown
   const uniqueShops = [...new Set(reportData.map(item => item.shop_name))];
 
   return (
     <div style={{ display: "flex" }}>
-      <SidebarManager />
+      <Sidebar />
       <div style={{ marginLeft: "250px", padding: "20px", width: "100%" }}>
         <h2>Sales & Profit Report</h2>
 
@@ -149,6 +192,23 @@ const SalesReport = () => {
             >
               Get Report
             </button>
+            
+            {/* --- PDF BUTTON ADDED HERE --- */}
+            <button 
+              onClick={generatePDF}
+              disabled={filteredData.length === 0} // Enabled only when data exists
+              style={{ 
+                padding: "8px 16px", 
+                backgroundColor: filteredData.length > 0 ? "#28a745" : "#ccc", 
+                color: "white", 
+                border: "none", 
+                borderRadius: "4px", 
+                cursor: filteredData.length > 0 ? "pointer" : "not-allowed",
+                marginLeft: "auto" // Push to right side
+              }}
+            >
+              Download PDF Report
+            </button>
           </div>
         </div>
 
@@ -180,7 +240,7 @@ const SalesReport = () => {
           >
             <option value="">All Payment Types</option>
             <option value="Paid">Paid</option>
-            <option value="Instalments">Instalments</option>
+            <option value="Installment">Installment</option>
             <option value="Unpaid">Unpaid</option>
           </select>
 
@@ -214,8 +274,6 @@ const SalesReport = () => {
             <thead>
               <tr style={{ backgroundColor: "#f4f4f4", textAlign: "center" }}>
                 <th style={{ padding: "10px" }}>Shop Name</th>
-                
-                {/* Column with specific search: Product Name */}
                 <th style={{ padding: "10px" }}>
                   <div>Product Name</div>
                   <input
@@ -227,8 +285,6 @@ const SalesReport = () => {
                     style={{ marginTop: "5px", width: "90%", padding: "4px", fontSize: "12px" }}
                   />
                 </th>
-
-                {/* Column with specific search: Model */}
                 <th style={{ padding: "10px" }}>
                    <div>Model</div>
                    <input
@@ -240,7 +296,6 @@ const SalesReport = () => {
                     style={{ marginTop: "5px", width: "90%", padding: "4px", fontSize: "12px" }}
                   />
                 </th>
-
                 <th style={{ padding: "10px" }}>Brand</th>
                 <th style={{ padding: "10px" }}>Qty Sold</th>
                 <th style={{ padding: "10px" }}>Sale Type</th>
