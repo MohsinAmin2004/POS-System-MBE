@@ -240,7 +240,7 @@ const SalesReport = () => {
           >
             <option value="">All Payment Types</option>
             <option value="Paid">Paid</option>
-            <option value="Instalment">Instalment</option>
+            <option value="Instalments">Instalments</option>
             <option value="Unpaid">Unpaid</option>
           </select>
 
